@@ -24,10 +24,11 @@ For anything not covered above — team structure, functional groups (e.g. who's
 
 ## Leadership
 
-Founder and leadership bios are **not** duplicated in this repo. For that, consult `revert-knowledge-base` live, every time — don't rely on a cached read of this file for anything leadership-related:
-
-1. Clone with `git clone --filter=blob:none --no-checkout <remote>` into a scratch directory outside this repo's working tree.
-2. Run `git sparse-checkout set "company/about revert/team/"` — that path only.
-3. That folder is an index of individual leadership/founder profiles (CVs) — read it live to answer any question about who the founders/leadership are and their backgrounds.
-
-Do not fetch, list, or reach any other path in `revert-knowledge-base` from this section (in particular `company/fundraising/`, `sales/`, `regulation/`, and `company/atas/` are always off-limits — see `AGENTS.md`). If `revert-knowledge-base` isn't reachable, say so plainly rather than answering from anything else — this section has no static fallback content.
+Founder and leadership bios are **not** duplicated in this repo. For that, consult `revert-knowledge-base`'s
+`company/about revert/team/` folder live, every time — don't rely on a cached read of this file for
+anything leadership-related. Follow the root `AGENTS.md`'s `revert-knowledge-base` instructions exactly
+(clone command, `--no-cone` sparse-checkout, the required `git checkout` step, and the excluded-path list)
+rather than the steps being repeated here — that folder is an index of individual leadership/founder
+profiles (CVs); once checked out, read it live to answer any question about who the founders/leadership
+are and their backgrounds. If `revert-knowledge-base` isn't reachable, say so plainly rather than answering
+from anything else — this section has no static fallback content.
