@@ -1,0 +1,9 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Scratch clones of external sources (e.g. a revert-knowledge-base
+# sparse-checkout) should live outside this repo's working tree. If one
+# is ever created in-tree by mistake, ignore it here rather than
+# committing it.
+/.scratch/
