@@ -7,9 +7,25 @@ owner: TBD (repo maintainer — update to whoever owns this content)
 
 Who owns what, and who to ask for a given context.
 
-`last_verified` above applies to the static "Who owns what" section below. The **Leadership** section is a live pointer and carries no staleness date of its own — always fetch it fresh rather than trusting any cached read (see that section).
+`last_verified` above applies to the static sections below. The **Leadership** section is a live pointer and carries no staleness date of its own — always fetch it fresh rather than trusting any cached read (see that section).
 
-## Who owns what
+## Who to ask about what
+
+Confirmed by the repo owner. This section is authoritative — unlike the commit-history signal further down, which is inference.
+
+| Topic | Ask |
+|---|---|
+| Revert's thesis — what we're betting on and why | **Rodrigo Terni** |
+| How consultants work day to day | **Luis Leão** |
+| Product roadmap | **Matheus Fortes** |
+| Nix — the backend | **Daniel Vieira** |
+| Bruxo — the WhatsApp concierge agent | **Guilherme Scagnolato** |
+
+New here? These five are a **sequence, not a menu** — [Getting Started](../getting-started/README.md) has the order and why it matters.
+
+## Who commits where (inferred, unconfirmed)
+
+**This is a different question from the table above.** "Who to ask about a system" and "who commits to it most" are not the same thing — a system's owner may not be its highest-volume contributor, and the two lists genuinely disagree in at least one place (commit history points at Yuri Brito for `concierge-agent-pi`, while Bruxo questions go to Guilherme Scagnolato). Trust the table above; treat what follows as a hint about where code activity has been.
 
 No org chart or HR system was reachable when this section was written. What follows for the four product repos is **not** an authoritative org chart — it's a lightweight signal read off each repo's commit history (`git log --format='%an <%ae>' | sort | uniq -c | sort -rn`, most recent ~200 commits per repo, full history where a repo has fewer). Treat it as "who's touched this most recently, as best we can tell from git," not "who owns this." A human should confirm before relying on it. None of the four repos has a `CODEOWNERS` file or a README section naming an owning team, so commit history is the only signal available.
 
@@ -20,7 +36,7 @@ A recurring caveat: several contributors appear under two or more identities in 
 - **`concierge-agent-pi`** — Commit history suggests `Yuri Brito` (appearing as both `yuri.brito` and `yuribrito-revai`) has been the primary contributor (117 + 84 commits across those two identities). Unconfirmed — ask them or your onboarding contact to verify.
 - **`revert-cloud-infra`** — Commit history suggests `Matheus Cruz` (`mathmedcruz`) has been essentially the sole contributor (27 of 28 total commits in the repo's full history). Unconfirmed — ask them or your onboarding contact to verify.
 
-For anything not covered above — team structure, functional groups (e.g. who's on growth, sales, support), reporting lines, or who to ask about a topic that isn't one of the four repos — `Not yet documented — needs a human to fill in`. Whoever owns this file should replace this note and the inferred signals above with a confirmed map, and update `last_verified`.
+For anything not covered by either section — team structure, functional groups (e.g. who's on growth, sales, support), or reporting lines — `Not yet documented — needs a human to fill in`. Whoever owns this file should extend the confirmed table above rather than the inferred list, and update `last_verified`.
 
 ## Leadership
 

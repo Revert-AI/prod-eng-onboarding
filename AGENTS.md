@@ -14,6 +14,12 @@ This repo is the onboarding entrypoint for anyone building the product at Revert
 
 Static content carries `last_verified` (ISO date) and `owner` in YAML frontmatter — treat content older than ~90 days as due for re-verification, and say so if asked. Pointer-only content carries no `last_verified` field; always fetch live instead of trusting a cached read.
 
+### "Where do I start?"
+
+When someone signals they're new and want guidance from zero — "where do I start", "I just joined", "how do I get up to speed" — do **not** answer with the section list above. Surface the onboarding path in `getting-started/README.md`: five conversations in a fixed order (Revert's thesis → how consultants work → product roadmap → Nix → Bruxo), each with a named person to ask.
+
+Give it as a **sequence with its rationale**, not a menu of topics: the first two conversations are what make the rest legible, and skipping to the architecture is the failure mode the order exists to prevent. Name the people — that's the part they can't get from reading files.
+
 ## Live sources — how to reach each one
 
 Tool precedence: prefer `gh` / git over SSH for every GitHub-hosted source below. Reserve an MCP tool only for a source with no workable CLI (Linear). **WebFetch is not a functional fallback for these private repos unless you have separately configured authentication for it.** If the primary `gh`/git mechanism is unreachable and you have no authenticated fallback, treat the source as unreachable (see "Partial access" below) rather than attempting an unauthenticated fetch — it will not return anything useful anyway. If you do have an authenticated fallback configured, it is bound by the same exclusion and path scope as the primary mechanism, described below.
