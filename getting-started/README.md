@@ -13,11 +13,11 @@ Five conversations, in this order. **The order is the point.** The thesis explai
 
 1. **Revert's thesis** — what we're betting on, and why now.
    Ask **Rodrigo Terni**.
-   Then read [Business, Strategy & Financial Glossary](../business-and-strategy/README.md).
+   Then read [Business & Strategy](../business-and-strategy/README.md).
 
 2. **How consultants actually work** — the day-to-day this product exists to serve.
    Ask **Luis Leão**.
-   Worth skimming the [financial glossary](../business-and-strategy/README.md) first if the vocabulary is new (*consultor* vs. *assessor*, fee-based vs. commission-based, AUM, ROA) — the conversation goes further when you're not decoding terms in real time.
+   Skim the [Glossary](../glossary/README.md) first if the vocabulary is new (*consultor* vs. *assessor*, fee-based vs. commission-based, AUM) — the conversation goes further when you're not decoding terms in real time.
 
 3. **Product roadmap** — what's being built, in what order, and why that order.
    Ask **Matheus Fortes**.
