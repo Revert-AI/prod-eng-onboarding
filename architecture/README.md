@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-08-06
+last_verified: 2026-08-07
 owner: TBD (repo maintainer — update to whoever owns this content)
 ---
 
@@ -25,6 +25,29 @@ database-enforced isolation as the correctness boundary.
 This is a thin, static overview only. Anything about a specific repo's current code, deploy state,
 or design detail should be answered by consulting that source live, not by trusting this file —
 see the pointer table below.
+
+## Deep dive: `nix_webserver`
+
+Nix is the monolith — the system with the most surface area and the highest blast radius, and the
+one most worth understanding in depth before touching it. Two static reference documents go well
+beyond this page's overview:
+
+- [`nix-webserver/architecture.html`](nix-webserver/architecture.html) — runtime topology (the one
+  image, five ECS Fargate services), the request path through the middleware stack, multi-tenancy
+  and Row-Level Security (the two coexisting isolation layers — see the [Glossary](../glossary/README.md)'s
+  `Tenant` entry for the vocabulary), and the money path from ingestion through reconciliation,
+  booking, and billing.
+- [`nix-webserver/data-model.html`](nix-webserver/data-model.html) — what every table inherits
+  (history mirroring, soft delete, decimal-for-money), the core Persona/Wallet/Asset/Position
+  entities and how RLS turns their foreign-key topology into an access policy, and the asset
+  catalog's exclusive-subtype pattern.
+
+Both are **static HTML, in Portuguese**, captured `2026-08-07` directly from the `nix_webserver`
+repo (code, task definitions, Terragrunt, and its own `_bmad-output/` doc set) — open them in a
+browser, not as markdown. Treat them the same way as the rest of this section: a point-in-time
+snapshot, not a live source. Re-verify against the repo (or regenerate) once they're a few months
+stale, and re-run the secret-screening check below on any refresh, since they were built from a
+live consultation of the repo.
 
 ## Sources — consult live for anything time-sensitive
 

@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>nix_webserver — Modelagem de Dados</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper:   #EDEFEC;
+    --panel:   #F7F8F6;
+    --panel-2: #E3E7E3;
+    --ink:     #0C1D20;
+    --muted:   #56696A;
+    --line:    #C6D0CC;
+    --line-2:  #A9B7B3;
+    --verd:    #14675E;
+    --amber:   #9A5B06;
+    --crimson: #93262B;
+
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", Charter, "Bitstream Charter", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:   #0A1517;
+      --panel:   #101F1F;
+      --panel-2: #16292A;
+      --ink:     #DCE6E2;
+      --muted:   #8CA29F;
+      --line:    #263A38;
+      --line-2:  #37504D;
+      --verd:    #62BFAF;
+      --amber:   #E0A653;
+      --crimson: #E2727A;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:   #0A1517;
+    --panel:   #101F1F;
+    --panel-2: #16292A;
+    --ink:     #DCE6E2;
+    --muted:   #8CA29F;
+    --line:    #263A38;
+    --line-2:  #37504D;
+    --verd:    #62BFAF;
+    --amber:   #E0A653;
+    --crimson: #E2727A;
+  }
+
+  :root[data-theme="light"] {
+    --paper:   #EDEFEC;
+    --panel:   #F7F8F6;
+    --panel-2: #E3E7E3;
+    --ink:     #0C1D20;
+    --muted:   #56696A;
+    --line:    #C6D0CC;
+    --line-2:  #A9B7B3;
+    --verd:    #14675E;
+    --amber:   #9A5B06;
+    --crimson: #93262B;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 56px 28px 120px; }
+  .prose { max-width: 70ch; }
+
+  .masthead { display: flex; flex-direction: column; gap: 18px; padding-bottom: 34px; }
+  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--verd); }
+  h1 { font-family: var(--mono); font-size: clamp(28px, 4.6vw, 44px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.08; text-wrap: balance; margin: 0; }
+  .lede { max-width: 66ch; font-size: 19px; line-height: 1.55; }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 12px; }
+  .fact { background: var(--paper); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .fact b { font-family: var(--sans); font-variant-numeric: tabular-nums; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+  .fact span { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+  section { padding: 46px 0 6px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 20px; }
+  .shead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .sref { font-family: var(--mono); font-size: 12px; color: var(--verd); letter-spacing: .06em; padding-top: 2px; }
+  h2 { font-family: var(--mono); font-size: clamp(20px, 2.6vw, 27px); font-weight: 600; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: .02em; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--verd); text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+  code, .m { font-family: var(--mono); font-size: .86em; background: var(--panel-2); padding: 1px 5px; border-radius: 2px; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--panel); padding: 18px; }
+  svg.diagram { display: block; width: 100%; min-width: 760px; height: auto; }
+  figcaption { font-family: var(--sans); font-size: 13.5px; line-height: 1.5; color: var(--muted); max-width: 88ch; }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  .d-ent   { fill: var(--panel); stroke: var(--line-2); stroke-width: 1; }
+  .d-ent-c { fill: var(--panel); stroke: var(--crimson); stroke-width: 1.4; }
+  .d-ent-a { fill: var(--panel); stroke: var(--amber); stroke-width: 1.4; }
+  .d-ent-v { fill: var(--panel); stroke: var(--verd); stroke-width: 1.4; }
+  .d-ehdr  { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 1; }
+  .d-box   { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 1; }
+  .d-box-q { fill: none; stroke: var(--line-2); stroke-width: 1; stroke-dasharray: 4 3; }
+  .d-group { fill: none; stroke: var(--line-2); stroke-dasharray: 3 3; }
+  .d-name  { fill: var(--ink); font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+  .d-t     { fill: var(--ink); font-family: var(--sans); font-size: 12px; }
+  .d-t2    { fill: var(--muted); font-family: var(--sans); font-size: 10.5px; }
+  .d-col   { fill: var(--ink); font-family: var(--mono); font-size: 10.5px; }
+  .d-col2  { fill: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+  .d-key   { fill: var(--verd); font-family: var(--mono); font-size: 9.5px; font-weight: 600; }
+  .d-hdr   { fill: var(--verd); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; }
+  .d-lbl   { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+  .d-lbl-a { fill: var(--amber); font-family: var(--mono); font-size: 10px; }
+  .d-lbl-c { fill: var(--crimson); font-family: var(--mono); font-size: 10px; }
+  .d-ln    { stroke: var(--line-2); stroke-width: 1.2; fill: none; }
+  .d-ln-d  { stroke: var(--line-2); stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; }
+  .d-ln-a  { stroke: var(--amber); stroke-width: 1.5; fill: none; }
+  .d-ln-c  { stroke: var(--crimson); stroke-width: 1.4; fill: none; }
+  .d-head   { fill: var(--line-2); }
+  .d-head-a { fill: var(--amber); }
+  .d-head-c { fill: var(--crimson); }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 13.5px; background: var(--panel); }
+  th, td { text-align: left; padding: 8px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 10px; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--panel-2); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.k { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  td.t { font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .tag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em; padding: 1px 5px; border: 1px solid var(--line-2); color: var(--muted); white-space: nowrap; }
+  .tag.pk { border-color: var(--verd); color: var(--verd); }
+  .tag.fk { border-color: var(--line-2); color: var(--ink); }
+  .tag.uk { border-color: var(--amber); color: var(--amber); }
+  .tag.pii { border-color: var(--crimson); color: var(--crimson); }
+
+  .callout { border-left: 3px solid var(--crimson); background: var(--panel); padding: 14px 18px; max-width: 80ch; display: flex; flex-direction: column; gap: 6px; }
+  .callout.v { border-left-color: var(--verd); }
+  .callout.a { border-left-color: var(--amber); }
+  .callout b { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--crimson); }
+  .callout.v b { color: var(--verd); }
+  .callout.a b { color: var(--amber); }
+  .callout p { font-size: 15.5px; line-height: 1.55; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
+  .cols > div { display: flex; flex-direction: column; gap: 8px; }
+  .cols p { font-size: 15.5px; }
+
+  ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 5px; max-width: 76ch; }
+  li::marker { color: var(--muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); align-items: center; }
+
+  footer { border-top: 1px solid var(--line); margin-top: 46px; padding-top: 20px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); max-width: 80ch; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding: 36px 18px 80px; }
+    .scroll { padding: 12px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Revert AI · nix_webserver · referência de modelagem de dados</div>
+    <h1>Modelagem de dados</h1>
+    <p class="lede">Como o domínio de back-office financeiro está representado no PostgreSQL: as convenções que toda tabela herda, as sete regiões do esquema, as colunas que importam e a topologia de chaves estrangeiras que a Row-Level Security transforma em política de acesso.</p>
+
+    <div class="facts">
+      <div class="fact"><b>221</b><span>classes de modelo</span></div>
+      <div class="fact"><b>153</b><span>com histórico</span></div>
+      <div class="fact"><b>35</b><span>sem histórico</span></div>
+      <div class="fact"><b>396</b><span>relacionamentos</span></div>
+      <div class="fact"><b>81</b><span>tabelas em linkage RLS</span></div>
+      <div class="fact"><b>914</b><span>migrations</span></div>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section>
+    <div class="shead"><span class="sref">§01</span><h2>O que toda tabela herda</h2></div>
+
+    <p class="prose">Nenhum modelo herda <span class="m">models.Model</span> diretamente — as únicas exceções são tabelas de infraestrutura (Kombu) e views materializadas. Todo o resto herda <span class="m">BaseModel</span> ou <span class="m">BaseModelNoHistory</span>, e essa escolha determina se a tabela ganha ou não um espelho de auditoria.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1020 400" role="img" aria-label="Anatomia de uma tabela: colunas de domínio mais as três colunas herdadas de BaseModel, e a tabela espelho historical_ criada pelo simple_history com history_id, history_date, history_type e history_user.">
+          <defs>
+            <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <rect class="d-ent"  x="20" y="46" width="360" height="284" rx="2"/>
+          <rect class="d-ehdr" x="20" y="46" width="360" height="30" rx="2"/>
+          <text class="d-name" x="34" y="66">wallet_wallet</text>
+          <text class="d-hdr"  x="20" y="36">A TABELA</text>
+
+          <text class="d-key" x="34"  y="96">PK</text>
+          <text class="d-col" x="62"  y="96">id</text>
+          <text class="d-col2" x="230" y="96">bigint</text>
+
+          <text class="d-col" x="62"  y="118">wallet_nix</text>
+          <text class="d-col2" x="230" y="118">text</text>
+          <text class="d-key" x="34"  y="140">FK</text>
+          <text class="d-col" x="62"  y="140">broker_id</text>
+          <text class="d-col2" x="230" y="140">bigint PROTECT</text>
+          <text class="d-col" x="62"  y="162">conciliation_policy</text>
+          <text class="d-col2" x="230" y="162">varchar</text>
+          <text class="d-col" x="62"  y="184">locked_position_date</text>
+          <text class="d-col2" x="230" y="184">date</text>
+          <text class="d-col2" x="62" y="206">…</text>
+
+          <line class="d-ln-d" x1="34" y1="222" x2="366" y2="222"/>
+          <text class="d-lbl"  x="34" y="240">HERDADO DE BASEMODEL</text>
+          <text class="d-col"  x="62" y="262">created_date</text>
+          <text class="d-col2" x="230" y="262">timestamptz auto</text>
+          <text class="d-col"  x="62" y="284">update_date</text>
+          <text class="d-col2" x="230" y="284">timestamptz auto</text>
+          <text class="d-col"  x="62" y="306">is_active</text>
+          <text class="d-col2" x="230" y="306">boolean — soft delete</text>
+
+          <line class="d-ln" x1="380" y1="188" x2="470" y2="188" marker-end="url(#m1)"/>
+          <text class="d-lbl" x="382" y="180">HistoricalRecords</text>
+          <text class="d-lbl" x="382" y="206">grava em todo save</text>
+
+          <rect class="d-ent-v" x="470" y="46" width="330" height="284" rx="2"/>
+          <rect class="d-ehdr"  x="470" y="46" width="330" height="30" rx="2"/>
+          <text class="d-name"  x="484" y="66">historical_wallet_wallet</text>
+          <text class="d-hdr"   x="470" y="36">O ESPELHO</text>
+
+          <text class="d-key" x="484" y="96">PK</text>
+          <text class="d-col" x="512" y="96">history_id</text>
+          <text class="d-col" x="512" y="118">history_date</text>
+          <text class="d-col" x="512" y="140">history_type</text>
+          <text class="d-col2" x="660" y="140">+ ~ -</text>
+          <text class="d-key" x="484" y="162">FK</text>
+          <text class="d-col" x="512" y="162">history_user_id</text>
+          <text class="d-col" x="512" y="184">history_change_reason</text>
+          <line class="d-ln-d" x1="484" y1="200" x2="786" y2="200"/>
+          <text class="d-lbl" x="484" y="218">CÓPIA DE TODAS AS COLUNAS ACIMA</text>
+          <text class="d-col2" x="512" y="240">id, wallet_nix, broker_id, …</text>
+          <text class="d-lbl" x="484" y="272">Escrita também em bulk_create e</text>
+          <text class="d-lbl" x="484" y="288">bulk_update — o CustomManager</text>
+          <text class="d-lbl" x="484" y="304">redireciona para as versões</text>
+          <text class="d-lbl" x="484" y="320">…_with_history.</text>
+
+          <rect class="d-box-q" x="830" y="46" width="170" height="284" rx="2"/>
+          <text class="d-hdr" x="830" y="36">SEM ESPELHO</text>
+          <text class="d-t"  x="844" y="76">BaseModelNoHistory</text>
+          <text class="d-t2" x="844" y="98">mesmas três colunas,</text>
+          <text class="d-t2" x="844" y="114">nenhuma tabela histórica</text>
+          <text class="d-t2" x="844" y="146">Escolhido onde o volume</text>
+          <text class="d-t2" x="844" y="162">tornaria o espelho caro:</text>
+          <text class="d-col2" x="844" y="190">messages</text>
+          <text class="d-col2" x="844" y="208">channel_value</text>
+          <text class="d-col2" x="844" y="226">signal_event_log</text>
+          <text class="d-col2" x="844" y="244">agent_memory_entry</text>
+          <text class="d-col2" x="844" y="262">agent_reminder</text>
+          <text class="d-col2" x="844" y="280">request_log</text>
+          <text class="d-t2"  x="844" y="310">35 modelos hoje</text>
+        </svg>
+      </div>
+      <figcaption><b>153 tabelas de domínio carregam uma tabela-espelho.</b> É o que permite responder "quem mudou este número e quando" numa base financeira — e é também metade da contagem de tabelas do banco. O gerenciador customizado garante que operações em lote não escapem da auditoria: <span class="m">bulk_create</span> e <span class="m">bulk_update</span> são redirecionados para as versões com histórico, a menos que já estejam sendo chamados por elas.</figcaption>
+    </figure>
+
+    <h3>As cinco regras que moldam cada coluna</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Regra</th><th>Como aparece no esquema</th><th>Por quê</th></tr></thead>
+        <tbody>
+          <tr><td class="k">FK nunca CASCADE</td><td class="t">ON DELETE RESTRICT ou SET NULL</td><td>um delete em cascata pode se propagar por todo o banco; a maioria esmagadora das FKs é <span class="m">SET_NULL</span>, e <span class="m">PROTECT</span> aparece onde a referência é estrutural (<span class="m">Wallet.broker</span>, <span class="m">Persona.personal_info</span>, <span class="m">Asset.risk_class</span>)</td></tr>
+          <tr><td class="k">Decimal para dinheiro</td><td class="t">numeric(19,6) · numeric(19,10) para retorno</td><td><span class="m">float</span> introduz erro de arredondamento que se propaga silenciosamente por todo o pipeline. Retornos usam 10 casas porque são multiplicados em cadeia</td></tr>
+          <tr><td class="k">Soft delete</td><td class="t">is_active boolean + <span class="m">condition=Q(is_active=True)</span> em índices e constraints</td><td>como a linha não sai da tabela, toda unicidade precisa ser <em>parcial</em>: <span class="m">unique_wallet_nix_broker</span> só vale entre linhas ativas. Sem isso, reativar um registro colidiria com o excluído</td></tr>
+          <tr><td class="k">Enums como TextChoices</td><td class="t">varchar com choices, um enum por arquivo em <span class="m">common/</span></td><td>evita literal de string repetido em camadas diferentes — um typo silencioso que só aparece em produção</td></tr>
+          <tr><td class="k">FK, não identificador solto</td><td class="t">bigint referenciando a tabela</td><td>uma string de identificador pode apontar para algo que não existe. Onde o valor bruto do custodiante <em>precisa</em> ser preservado, ele convive com a FK resolvida (ver §04)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout a">
+      <b>Detalhe de implementação que muda como você lê o código</b>
+      <p>A maior parte das chaves estrangeiras não é <span class="m">models.ForeignKey</span> e sim <span class="m">auto_prefetch.ForeignKey</span>. No banco é exatamente a mesma coluna e a mesma constraint; a diferença é em runtime — o <span class="m">django-auto-prefetch</span> agrupa automaticamente o carregamento das relações acessadas, o que remove uma classe inteira de N+1 sem exigir <span class="m">select_related</span> em cada consulta. Modelos que o usam declaram <span class="m">base_manager_name = "prefetch_manager"</span> no Meta.</p>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="shead"><span class="sref">§02</span><h2>O núcleo: quem, onde, o quê</h2></div>
+
+    <p class="prose">Três entidades sustentam praticamente todo o esquema. <strong>Persona</strong> é quem (cliente, prospect, funcionário, empresa). <strong>Wallet</strong> é onde o dinheiro está custodiado — uma conta em corretora. <strong>Asset</strong> é o quê. O cruzamento delas numa data é a <strong>Position</strong>, e é dela que sai todo número que chega ao cliente.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1160 620" role="img" aria-label="Diagrama entidade-relacionamento do núcleo: Persona liga-se a Wallet por uma tabela M para N, Broker protege Wallet, Wallet e Asset convergem em Position e em MovementInserter, PersonalInfo é satélite um-para-um de Persona, e TimeSeries pendura-se em Asset.">
+          <defs>
+            <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <rect class="d-ent" x="20" y="60" width="230" height="184" rx="2"/>
+          <rect class="d-ehdr" x="20" y="60" width="230" height="28" rx="2"/>
+          <text class="d-name" x="32" y="79">Persona</text>
+          <text class="d-lbl" x="176" y="79">TENANT</text>
+          <text class="d-key" x="32" y="108">PK</text><text class="d-col" x="58" y="108">id</text>
+          <text class="d-col" x="58" y="128">person_type</text>
+          <text class="d-col" x="58" y="148">person_classification</text>
+          <text class="d-key" x="32" y="168">FK</text><text class="d-col" x="58" y="168">personal_info_id</text>
+          <text class="d-key" x="32" y="188">FK</text><text class="d-col" x="58" y="188">employee_id</text>
+          <text class="d-key" x="32" y="208">FK</text><text class="d-col" x="58" y="208">stage_id</text>
+          <text class="d-key" x="32" y="228">FK</text><text class="d-col" x="58" y="228">user_id · referral_id</text>
+
+          <rect class="d-ent-c" x="20" y="300" width="230" height="120" rx="2"/>
+          <rect class="d-ehdr"  x="20" y="300" width="230" height="28" rx="2"/>
+          <text class="d-name"  x="32" y="319">PersonalInfo</text>
+          <text class="d-lbl-c" x="182" y="319">PII</text>
+          <text class="d-col" x="58" y="348">name</text>
+          <text class="d-col" x="58" y="368">birth_date · mother_name</text>
+          <text class="d-col" x="58" y="388">marital_status · profession</text>
+          <text class="d-lbl-c" x="32" y="410">mascarado em from_db()</text>
+
+          <line class="d-ln" x1="135" y1="244" x2="135" y2="298" marker-end="url(#m2)"/>
+          <text class="d-lbl" x="142" y="274">N:1 PROTECT</text>
+
+          <rect class="d-ent" x="330" y="60" width="230" height="184" rx="2"/>
+          <rect class="d-ehdr" x="330" y="60" width="230" height="28" rx="2"/>
+          <text class="d-name" x="342" y="79">Wallet</text>
+          <text class="d-lbl" x="486" y="79">TENANT</text>
+          <text class="d-key" x="342" y="108">PK</text><text class="d-col" x="368" y="108">id</text>
+          <text class="d-col" x="368" y="128">wallet_nix</text>
+          <text class="d-key" x="342" y="148">FK</text><text class="d-col" x="368" y="148">broker_id</text>
+          <text class="d-col" x="368" y="168">wallet_type</text>
+          <text class="d-col" x="368" y="188">conciliation_policy</text>
+          <text class="d-col" x="368" y="208">locked_position_date</text>
+          <text class="d-lbl" x="342" y="230">UK (wallet_nix, broker) ativo</text>
+
+          <line class="d-ln" x1="250" y1="140" x2="328" y2="140" marker-end="url(#m2)"/>
+          <line class="d-ln" x1="328" y1="152" x2="250" y2="152" marker-end="url(#m2)"/>
+          <text class="d-lbl" x="252" y="132">M:N via</text>
+          <text class="d-lbl" x="252" y="176">persona_persona_wallet</text>
+
+          <rect class="d-ent" x="330" y="300" width="230" height="86" rx="2"/>
+          <rect class="d-ehdr" x="330" y="300" width="230" height="28" rx="2"/>
+          <text class="d-name" x="342" y="319">Broker</text>
+          <text class="d-lbl" x="480" y="319">SHARED</text>
+          <text class="d-col" x="368" y="348">broker_name</text>
+          <text class="d-col2" x="368" y="368">registro de custodiantes</text>
+          <line class="d-ln" x1="445" y1="298" x2="445" y2="246" marker-end="url(#m2)"/>
+          <text class="d-lbl" x="452" y="276">1:N PROTECT</text>
+
+          <rect class="d-ent-a" x="640" y="60" width="240" height="300" rx="2"/>
+          <rect class="d-ehdr"  x="640" y="60" width="240" height="28" rx="2"/>
+          <text class="d-name"  x="652" y="79">Position</text>
+          <text class="d-lbl-a" x="790" y="79">MONEY PATH</text>
+          <text class="d-key" x="652" y="108">PK</text><text class="d-col" x="678" y="108">id</text>
+          <text class="d-col" x="678" y="128">position_date</text>
+          <text class="d-key" x="652" y="148">FK</text><text class="d-col" x="678" y="148">wallet_id</text>
+          <text class="d-key" x="652" y="168">FK</text><text class="d-col" x="678" y="168">asset_id</text>
+          <text class="d-key" x="652" y="188">FK</text><text class="d-col" x="678" y="188">currency_id → Asset</text>
+          <text class="d-col" x="678" y="208">quantity · pu · gross_value</text>
+          <text class="d-col" x="678" y="228">avg_pu · avg_rate</text>
+          <text class="d-col2" x="678" y="248">10 janelas de PnL</text>
+          <text class="d-col2" x="678" y="268">10 janelas de retorno</text>
+          <text class="d-lbl" x="652" y="292">numeric(19,6) e (19,10)</text>
+          <text class="d-lbl" x="652" y="314">IDX (wallet, asset, date)</text>
+          <text class="d-lbl" x="652" y="334">parcial em is_active</text>
+
+          <line class="d-ln" x1="560" y1="140" x2="638" y2="140" marker-end="url(#m2)"/>
+          <text class="d-lbl" x="566" y="132">1:N</text>
+
+          <rect class="d-ent" x="640" y="420" width="240" height="150" rx="2"/>
+          <rect class="d-ehdr" x="640" y="420" width="240" height="28" rx="2"/>
+          <text class="d-name" x="652" y="439">MovementInserter</text>
+          <text class="d-col" x="678" y="468">movement_type · date</text>
+          <text class="d-key" x="652" y="488">FK</text><text class="d-col" x="678" y="488">nix_wallet_id · nix_asset_id</text>
+          <text class="d-col" x="678" y="508">price · quantity</text>
+          <text class="d-col" x="678" y="528">status_booking · matched</text>
+          <text class="d-lbl" x="652" y="552">UK idempotency_key</text>
+
+          <line class="d-ln" x1="445" y1="244" x2="445" y2="480" marker-end="url(#m2)"/>
+          <line class="d-ln" x1="445" y1="480" x2="638" y2="480" marker-end="url(#m2)"/>
+          <text class="d-lbl" x="452" y="470">1:N</text>
+
+          <rect class="d-ent" x="940" y="60" width="200" height="220" rx="2"/>
+          <rect class="d-ehdr" x="940" y="60" width="200" height="28" rx="2"/>
+          <text class="d-name" x="952" y="79">Asset</text>
+          <text class="d-lbl" x="1078" y="79">SHARED</text>
+          <text class="d-key" x="952" y="108">PK</text><text class="d-col" x="978" y="108">id</text>
+          <text class="d-col" x="978" y="128">asset_name</text>
+          <text class="d-col" x="978" y="148">asset_internal_id</text>
+          <text class="d-col" x="978" y="168">asset_class</text>
+          <text class="d-col" x="978" y="188">isin · country_scope</text>
+          <text class="d-key" x="952" y="208">FK</text><text class="d-col" x="978" y="208">risk_class_id</text>
+          <text class="d-key" x="952" y="228">FK</text><text class="d-col" x="978" y="228">7 FKs de subtipo</text>
+          <text class="d-lbl" x="952" y="252">UK asset_internal_id</text>
+          <text class="d-lbl" x="952" y="270">entre linhas ativas</text>
+
+          <line class="d-ln" x1="938" y1="150" x2="882" y2="150" marker-end="url(#m2)"/>
+          <text class="d-lbl" x="884" y="142">1:N ×2</text>
+          <line class="d-ln" x1="1040" y1="280" x2="1040" y2="420" marker-end="url(#m2)"/>
+
+          <rect class="d-ent" x="940" y="420" width="200" height="150" rx="2"/>
+          <rect class="d-ehdr" x="940" y="420" width="200" height="28" rx="2"/>
+          <text class="d-name" x="952" y="439">TimeSeries</text>
+          <text class="d-lbl" x="1080" y="439">SHARED</text>
+          <text class="d-col" x="978" y="468">series_name</text>
+          <text class="d-key" x="952" y="488">FK</text><text class="d-col" x="978" y="488">base_asset_id</text>
+          <text class="d-key" x="952" y="508">FK</text><text class="d-col" x="978" y="508">price_asset_id</text>
+          <text class="d-col" x="978" y="528">metric · is_benchmark</text>
+          <text class="d-lbl" x="952" y="552">preço de marcação</text>
+        </svg>
+      </div>
+      <figcaption><b>Note a moeda.</b> <span class="m">Position.currency_id</span> aponta para <span class="m">Asset</span>, não para uma tabela de moedas — no modelo, moeda <em>é</em> um ativo (classe <span class="m">SETTLED CASH</span>). Isso torna conversão cambial uma consulta à mesma série temporal de qualquer outro preço, ao custo de duas FKs da <span class="m">Position</span> para a mesma tabela. O mesmo padrão aparece em <span class="m">BrokerPosition</span>, <span class="m">InflowOutflow</span>, <span class="m">Invoice</span> e <span class="m">Aggregation</span>.</figcaption>
+    </figure>
+
+    <h3>Persona e seus satélites</h3>
+    <p class="prose">Persona é deliberadamente magra: a identidade em si é uma casca, e os dados pessoais moram em tabelas separadas ligadas em <span class="m">M:N</span>. O motivo é que uma mesma pessoa física pode aparecer em contextos diferentes e um mesmo endereço, telefone ou documento pode ser compartilhado entre personas relacionadas — cônjuges, empresa e sócio, cliente e o veículo de investimento dele.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tabela satélite</th><th>Cardinalidade</th><th>Conteúdo</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td class="k">PersonalInfo</td><td class="t">N:1 PROTECT</td><td>nome, nascimento, nome da mãe, estado civil, regime de bens, profissão</td><td><span class="tag pii">PII</span> mascarado no <span class="m">from_db</span></td></tr>
+          <tr><td class="k">PersonalDocument</td><td class="t">M:N</td><td>CPF, CNPJ, RG, passaporte</td><td>compartilhável entre personas</td></tr>
+          <tr><td class="k">ContactInfo</td><td class="t">M:N</td><td>telefone, e-mail, com <span class="m">allow_middle</span></td><td>é a âncora 1:1 do <span class="m">ChannelValue</span> na mensageria</td></tr>
+          <tr><td class="k">FullAddress</td><td class="t">M:N</td><td>logradouro, número, bairro, CEP, cidade, UF</td><td><span class="m">main_address</span> marca o principal</td></tr>
+          <tr><td class="k">CompanyInfo</td><td class="t">M:N</td><td>razão social, CNPJ</td><td>para pessoa jurídica</td></tr>
+          <tr><td class="k">AnbimaInfo</td><td class="t">N:1 SET NULL</td><td>código ANBIMA, perfil de risco, KYC, datas de assinatura</td><td>compliance regulatório</td></tr>
+          <tr><td class="k">PersonaGroup</td><td class="t">M:N</td><td>grupos de clientes e de times</td><td>alimenta a visibilidade de assessor</td></tr>
+          <tr><td class="k">Wallet</td><td class="t">M:N</td><td>as contas custodiadas da persona</td><td>uma carteira pode ter mais de um titular</td></tr>
+          <tr><td class="k">Employee</td><td class="t">N:1 SET NULL</td><td>vínculo com o funcionário responsável</td><td>+ <span class="m">AdvisorProfile</span> 1:1 e <span class="m">EmployeeCertification</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <b>Mascaramento de PII é do modelo, não da view</b>
+      <p><span class="m">PersonalInfo.from_db()</span> substitui o campo <span class="m">name</span> pelo id da persona quando o contexto da requisição pede mascaramento, e <span class="m">save()</span> restaura o valor original antes de gravar. A consequência prática: ler o nome via <span class="m">.values_list("personal_info__name")</span> ou via <span class="m">annotate</span> <strong>não passa pelo <span class="m">from_db</span></strong> e devolve o texto em claro. É por isso que essas duas formas são bloqueadas em code review — não é preferência de estilo, é o vazamento.</p>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="shead"><span class="sref">§03</span><h2>Catálogo de ativos: subtipo exclusivo no banco</h2></div>
+
+    <p class="prose">Um ativo pode ser ação, renda fixa, fundo, derivativo, alternativo, caixa liquidado ou caixa a liquidar — e cada um desses tipos tem atributos que os outros não têm. O modelo resolve isso com <strong>uma FK opcional por subtipo na tabela <span class="m">Asset</span></strong> e uma <span class="m">CheckConstraint</span> que exige que exatamente uma delas esteja preenchida.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1080 430" role="img" aria-label="Asset tem sete chaves estrangeiras opcionais, uma por subtipo, com uma restrição de verificação que exige exatamente uma preenchida e outra que exige coerência com a coluna asset_class. À esquerda, as FKs de classificação; à direita, os consumidores da tabela Asset.">
+          <defs>
+            <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <rect class="d-box-q" x="20" y="40" width="270" height="128" rx="2"/>
+          <text class="d-hdr" x="20" y="32">CLASSIFICAÇÃO</text>
+          <text class="d-col" x="34" y="66">risk_class_id</text><text class="d-col2" x="180" y="66">PROTECT</text>
+          <text class="d-col" x="34" y="88">risk_vector_id</text>
+          <text class="d-col" x="34" y="110">asset_subclass_id</text>
+          <text class="d-col" x="34" y="132">exchange_id</text>
+          <text class="d-col" x="34" y="154">liquidity_calendar_id</text>
+
+          <line class="d-ln" x1="290" y1="100" x2="378" y2="100" marker-end="url(#m3)"/>
+
+          <rect class="d-ent-v" x="380" y="40" width="300" height="128" rx="2"/>
+          <rect class="d-ehdr"  x="380" y="40" width="300" height="28" rx="2"/>
+          <text class="d-name"  x="392" y="59">Asset</text>
+          <text class="d-lbl"   x="616" y="59">SHARED</text>
+          <text class="d-col" x="392" y="88">asset_internal_id</text><text class="d-col2" x="560" y="88">UK ativo</text>
+          <text class="d-col" x="392" y="110">asset_name · isin</text>
+          <text class="d-col" x="392" y="132">asset_class</text><text class="d-col2" x="560" y="132">redundante</text>
+          <text class="d-col" x="392" y="154">mtm_method · is_tax_exempt</text>
+
+          <line class="d-ln" x1="682" y1="100" x2="770" y2="100" marker-end="url(#m3)"/>
+
+          <rect class="d-box-q" x="772" y="40" width="290" height="128" rx="2"/>
+          <text class="d-hdr" x="772" y="32">QUEM APONTA PARA CÁ</text>
+          <text class="d-col2" x="786" y="66">Position (asset + currency)</text>
+          <text class="d-col2" x="786" y="88">MovementInserter · MovementBooking</text>
+          <text class="d-col2" x="786" y="110">BrokerPosition · BrokerMovement</text>
+          <text class="d-col2" x="786" y="132">TimeSeries (base + price)</text>
+          <text class="d-col2" x="786" y="154">Aggregation · Invoice · InflowOutflow</text>
+
+          <rect class="d-ent-c" x="215" y="196" width="630" height="42" rx="2"/>
+          <text class="d-t"     x="229" y="214">CheckConstraint only_one_asset_class_allowed</text>
+          <text class="d-lbl-c" x="229" y="230">exatamente uma das sete FKs abaixo é NOT NULL — as outras seis são NULL</text>
+          <line class="d-ln-c" x1="530" y1="170" x2="530" y2="194"/>
+
+          <line class="d-ln" x1="530" y1="238" x2="530" y2="262"/>
+          <line class="d-ln" x1="90" y1="262" x2="990" y2="262"/>
+
+          <rect class="d-ent" x="20" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="32" y="306">Equity</text>
+          <text class="d-col2" x="32" y="328">ticker</text>
+          <line class="d-ln" x1="90" y1="262" x2="90" y2="284" marker-end="url(#m3)"/>
+
+          <rect class="d-ent" x="170" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="182" y="306">FixedIncome</text>
+          <text class="d-col2" x="182" y="328">string_index</text>
+          <text class="d-col2" x="182" y="346">maturity_date</text>
+          <text class="d-col2" x="182" y="364">coupon_rate · fgc</text>
+          <line class="d-ln" x1="240" y1="262" x2="240" y2="284" marker-end="url(#m3)"/>
+
+          <rect class="d-ent" x="320" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="332" y="306">Fund</text>
+          <text class="d-col2" x="332" y="328">entity_code</text>
+          <text class="d-col2" x="332" y="346">is_fic · is_exclusive</text>
+          <text class="d-col2" x="332" y="364">prazos de cotização</text>
+          <line class="d-ln" x1="390" y1="262" x2="390" y2="284" marker-end="url(#m3)"/>
+
+          <rect class="d-ent" x="470" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="482" y="306">Derivative</text>
+          <text class="d-col2" x="482" y="328">identifier</text>
+          <text class="d-col2" x="482" y="346">maturity_date</text>
+          <line class="d-ln" x1="540" y1="262" x2="540" y2="284" marker-end="url(#m3)"/>
+
+          <rect class="d-ent" x="620" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="632" y="306">Alternative</text>
+          <text class="d-col2" x="632" y="328">description</text>
+          <line class="d-ln" x1="690" y1="262" x2="690" y2="284" marker-end="url(#m3)"/>
+
+          <rect class="d-ent" x="770" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="782" y="306">ExpectedCash</text>
+          <text class="d-col2" x="782" y="328">currency</text>
+          <text class="d-col2" x="782" y="346">maturity_date</text>
+          <line class="d-ln" x1="840" y1="262" x2="840" y2="284" marker-end="url(#m3)"/>
+
+          <rect class="d-ent" x="920" y="286" width="140" height="86" rx="2"/>
+          <text class="d-name" x="932" y="306">SettledCash</text>
+          <text class="d-col2" x="932" y="328">description</text>
+          <text class="d-col2" x="932" y="346">é a moeda</text>
+          <line class="d-ln" x1="990" y1="262" x2="990" y2="284" marker-end="url(#m3)"/>
+
+          <text class="d-lbl-c" x="20" y="398">Segunda constraint — asset_class_fk_matches_value: se a coluna asset_class está preenchida, a FK correspondente precisa estar também.</text>
+          <text class="d-lbl-c" x="20" y="416">Terceira camada — um trigger no banco valida que asset_subclass.parent_class bate com asset.asset_class. Sete UKs parciais impedem que dois ativos compartilhem o mesmo subtipo.</text>
+        </svg>
+      </div>
+      <figcaption><b>Por que não herança de tabela nem uma coluna JSON.</b> A coluna <span class="m">asset_class</span> é redundante em relação à FK preenchida — existe para permitir filtro e agrupamento sem <span class="m">JOIN</span> com sete tabelas, e a segunda restrição é o que impede essa redundância de divergir. É uma denormalização deliberada, protegida no banco em vez de na aplicação: o custo é a checagem no INSERT, o ganho é que nenhuma query de relatório precisa adivinhar o tipo do ativo.</figcaption>
+    </figure>
+
+    <p class="prose">Ao lado do catálogo compartilhado existe <span class="m">tenant_assets</span>: uma camada por tenant que sobrepõe renomeações, reclassificações de risco e ajustes de liquidez sem tocar no registro canônico. E <span class="m">DraftAsset</span> guarda identificadores que o custodiante enviou mas ainda não foram resolvidos — <span class="m">Position</span>, <span class="m">MovementInserter</span>, <span class="m">BrokerPosition</span> e <span class="m">BrokerMovement</span> todos têm uma FK opcional para ele, exatamente para que uma linha não resolvida ainda possa ser gravada e rastreada.</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="shead"><span class="sref">§04</span><h2>O trilho duplo: nossa verdade e a do custodiante</h2></div>
+
+    <p class="prose">Esta é a decisão de modelagem mais consequente do esquema. Todo fato financeiro existe <strong>duas vezes</strong>, em tabelas separadas: o que a Nix registrou como intenção e o que o custodiante reportou. Elas nunca são fundidas — são <em>comparadas</em>, e o resultado da comparação é uma terceira tabela.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1120 500" role="img" aria-label="Duas trilhas paralelas: a trilha Nix com MovementInserter, MovementBooking e Position; a trilha do custodiante com BrokerData, BrokerMovement e BrokerPosition. Entre elas, a tabela Conciliation compara as duas e gera Anomaly quando divergem.">
+          <defs>
+            <marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9"/>
+            </marker>
+            <marker id="m4c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head-c" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <text class="d-hdr" x="20" y="34">TRILHA NIX — O QUE NÓS AFIRMAMOS</text>
+
+          <rect class="d-ent" x="20" y="46" width="240" height="104" rx="2"/>
+          <rect class="d-ehdr" x="20" y="46" width="240" height="26" rx="2"/>
+          <text class="d-name" x="32" y="64">MovementInserter</text>
+          <text class="d-col2" x="32" y="90">a intenção: trade, evento corporativo</text>
+          <text class="d-col2" x="32" y="108">movement_type · price · quantity</text>
+          <text class="d-col2" x="32" y="126">status_booking · matched</text>
+          <text class="d-col2" x="32" y="144">idempotency_key UNIQUE</text>
+
+          <rect class="d-ent" x="300" y="46" width="240" height="104" rx="2"/>
+          <rect class="d-ehdr" x="300" y="46" width="240" height="26" rx="2"/>
+          <text class="d-name" x="312" y="64">MovementBooking</text>
+          <text class="d-col2" x="312" y="90">a intenção já contabilizada</text>
+          <text class="d-col2" x="312" y="108">FK inserter_id</text>
+          <text class="d-col2" x="312" y="126">is_booked · external_movement_id</text>
+          <text class="d-col2" x="312" y="144">movement_parent_id → self</text>
+
+          <rect class="d-ent-a" x="580" y="46" width="240" height="104" rx="2"/>
+          <rect class="d-ehdr"  x="580" y="46" width="240" height="26" rx="2"/>
+          <text class="d-name"  x="592" y="64">Position</text>
+          <text class="d-col2" x="592" y="90">o saldo por carteira, ativo e dia</text>
+          <text class="d-col2" x="592" y="108">quantity · pu · gross_value</text>
+          <text class="d-col2" x="592" y="126">daily/mtd/ytd/ltd/1m…36m</text>
+          <text class="d-col2" x="592" y="144">tudo em numeric, nunca float</text>
+
+          <line class="d-ln" x1="260" y1="98" x2="298" y2="98" marker-end="url(#m4)"/>
+          <line class="d-ln" x1="540" y1="98" x2="578" y2="98" marker-end="url(#m4)"/>
+
+          <rect class="d-ent-c" x="300" y="212" width="380" height="96" rx="2"/>
+          <rect class="d-ehdr"  x="300" y="212" width="380" height="26" rx="2"/>
+          <text class="d-name"  x="312" y="230">Conciliation</text>
+          <text class="d-lbl-c" x="600" y="230">db_table = conciliation</text>
+          <text class="d-col2" x="312" y="256">comparison JSONB — o diff entre os dois lados</text>
+          <text class="d-col2" x="312" y="274">comparison_date · status · booked_status</text>
+          <text class="d-col2" x="312" y="292">FK nix_wallet_id · nix_asset_id + os valores textuais crus</text>
+
+          <line class="d-ln-c" x1="140" y1="150" x2="140" y2="260" marker-end="url(#m4c)"/>
+          <line class="d-ln-c" x1="140" y1="260" x2="298" y2="260" marker-end="url(#m4c)"/>
+          <text class="d-lbl-c" x="148" y="200">FK conciliation_id</text>
+          <text class="d-lbl-c" x="148" y="216">no MovementInserter</text>
+
+          <line class="d-ln-c" x1="490" y1="382" x2="490" y2="310" marker-end="url(#m4c)"/>
+          <text class="d-lbl-c" x="498" y="350">compara com o lado do custodiante</text>
+
+          <rect class="d-ent-c" x="740" y="212" width="200" height="96" rx="2"/>
+          <rect class="d-ehdr"  x="740" y="212" width="200" height="26" rx="2"/>
+          <text class="d-name"  x="752" y="230">Anomaly</text>
+          <text class="d-col2" x="752" y="256">anomaly_type · status</text>
+          <text class="d-col2" x="752" y="274">anomaly_value numeric(19,10)</text>
+          <text class="d-col2" x="752" y="292">wallet e asset em PROTECT</text>
+          <line class="d-ln-c" x1="682" y1="260" x2="738" y2="260" marker-end="url(#m4c)"/>
+
+          <text class="d-hdr" x="20" y="404">TRILHA DO CUSTODIANTE — O QUE ELE REPORTOU</text>
+
+          <rect class="d-ent" x="20" y="416" width="240" height="70" rx="2"/>
+          <rect class="d-ehdr" x="20" y="416" width="240" height="26" rx="2"/>
+          <text class="d-name" x="32" y="434">BrokerData</text>
+          <text class="d-col2" x="32" y="460">raw_data JSONB + raw_data_hash</text>
+          <text class="d-col2" x="32" y="478">execution_id · approval_status</text>
+
+          <rect class="d-ent" x="300" y="416" width="240" height="70" rx="2"/>
+          <rect class="d-ehdr" x="300" y="416" width="240" height="26" rx="2"/>
+          <text class="d-name" x="312" y="434">BrokerMovement</text>
+          <text class="d-col2" x="312" y="460">nix_wallet_id · nix_asset_id resolvidos</text>
+          <text class="d-col2" x="312" y="478">+ asset_external_id cru preservado</text>
+
+          <rect class="d-ent" x="580" y="416" width="240" height="70" rx="2"/>
+          <rect class="d-ehdr" x="580" y="416" width="240" height="26" rx="2"/>
+          <text class="d-name" x="592" y="434">BrokerPosition</text>
+          <text class="d-col2" x="592" y="460">quantity · price · gross_value</text>
+          <text class="d-col2" x="592" y="478">curve_price · accrued_interest</text>
+
+          <rect class="d-ent" x="860" y="416" width="240" height="70" rx="2"/>
+          <rect class="d-ehdr" x="860" y="416" width="240" height="26" rx="2"/>
+          <text class="d-name" x="872" y="434">BrokerDataLink</text>
+          <text class="d-col2" x="872" y="460">GenericFK: content_type + object_id</text>
+          <text class="d-col2" x="872" y="478">liga a linha crua ao que ela gerou</text>
+
+          <line class="d-ln" x1="260" y1="450" x2="298" y2="450" marker-end="url(#m4)"/>
+          <line class="d-ln" x1="540" y1="450" x2="578" y2="450" marker-end="url(#m4)"/>
+          <line class="d-ln-d" x1="820" y1="450" x2="858" y2="450" marker-end="url(#m4)"/>
+        </svg>
+      </div>
+      <figcaption><b>O <span class="m">raw_data</span> nunca é descartado.</b> Cada linha do custodiante é gravada crua em <span class="m">BrokerData.raw_data</span> com um hash para deduplicação, e a <span class="m">BrokerDataLink</span> — uma chave estrangeira genérica — registra qual objeto normalizado aquela linha produziu. Quando um número diverge três meses depois, é possível voltar ao payload exato que o custodiante mandou naquele dia. As tabelas normalizadas também mantêm o identificador textual original ao lado da FK resolvida, o que permite auditar uma resolução de ativo errada.</figcaption>
+    </figure>
+
+    <h3>As colunas da <span class="m">Position</span></h3>
+    <p class="prose">É a tabela mais larga e mais lida do banco. Além da chave natural (carteira, ativo, data) ela carrega o saldo, a marcação, o intradiário e duas escadas paralelas de dez janelas — uma de resultado em moeda, outra de retorno percentual.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Grupo</th><th>Colunas</th><th>Tipo</th><th>Origem</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Chave natural</td><td class="t">position_date, wallet_id, asset_id</td><td class="t">date + bigint</td><td>índice composto parcial em <span class="m">is_active</span></td></tr>
+          <tr><td class="k">Denominação</td><td class="t">currency_id, exchange_rate</td><td class="t">bigint → Asset</td><td>conversão feita no <span class="m">CurrencyExchangeCalculator</span></td></tr>
+          <tr><td class="k">Saldo</td><td class="t">quantity, pu, gross_value, gross_up_value, net_value</td><td class="t">numeric(19,6)</td><td>importado da Comdinheiro</td></tr>
+          <tr><td class="k">Custo médio</td><td class="t">avg_pu, avg_rate, pu_date</td><td class="t">numeric(19,6)</td><td>importado</td></tr>
+          <tr><td class="k">Comparativo D-1</td><td class="t">previous_quantity, previous_gross_value, previous_pu</td><td class="t">numeric(19,6)</td><td>base do PnL diário</td></tr>
+          <tr><td class="k">Intradiário</td><td class="t">bought/sold_intraday_quantity, bought/sold_intraday_avg_price</td><td class="t">numeric(19,6)</td><td>separa giro do dia do estoque</td></tr>
+          <tr><td class="k">Decomposição do PnL</td><td class="t">opening_daily_pnl, intraday_daily_pnl, fee_daily_pnl, lending_daily_pnl</td><td class="t">numeric(19,6)</td><td><span class="m">WindowPnlCalculator</span></td></tr>
+          <tr><td class="k">Escada de PnL</td><td class="t">daily, mtd, ytd, ltd, last_1m, 3m, 6m, 12m, 24m, 36m</td><td class="t">numeric(19,6)</td><td><span class="m">WindowPnlCalculator</span></td></tr>
+          <tr><td class="k">Escada de retorno</td><td class="t">as mesmas dez janelas, em percentual</td><td class="t">numeric(19,<b>10</b>)</td><td><span class="m">DailyReturnsCalculator</span></td></tr>
+          <tr><td class="k">Marcação</td><td class="t">marking_method, nix_marking_method_id, marking_price_option_id</td><td class="t">text + bigint</td><td>define qual série precifica o ativo</td></tr>
+          <tr><td class="k">Procedência</td><td class="t">source, internal_position_id, file_id, username_id, edited_by_id, status JSONB</td><td class="t">misto</td><td>quem gerou e quem editou a linha</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <b>Por que as janelas são colunas e não uma agregação em tempo de consulta</b>
+      <p>Calcular retorno de 36 meses sobre uma série diária, por carteira e ativo, no momento em que o relatório é montado, seria proibitivo. As janelas são materializadas na escrita pelo <span class="m">EnrichPositionsService</span>. O preço é o modo de falha característico do sistema: se o enriquecimento não roda ou roda sobre uma série com buracos, as colunas ficam com números plausíveis e errados — sem exceção, sem log de erro. Daí a existência do <span class="m">PositionsHoleFiller</span>, que garante que a série seja contínua antes de qualquer cálculo de janela.</p>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="shead"><span class="sref">§05</span><h2>Séries temporais: a bifurcação público/tenant</h2></div>
+
+    <p class="prose">Preço de ativo é um dado compartilhado — o fechamento da PETR4 é o mesmo para todos os tenants. Já o NAV de uma carteira é dado de cliente. As duas coisas têm exatamente a mesma forma (uma data, um valor, uma origem), e por isso o esquema as separa em duas tabelas quase idênticas em <em>schemas diferentes</em>.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1020 430" role="img" aria-label="Asset alimenta TimeSeries como base_asset e price_asset; TimeSeries tem vários TimeSeriesProvider, e cada provider tem uma série diária. DailyTimeSeries fica no schema público sem carteira; TenantDailyTimeSeries fica no schema do tenant e tem chave estrangeira para carteira.">
+          <defs>
+            <marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <rect class="d-ent" x="20" y="60" width="180" height="90" rx="2"/>
+          <rect class="d-ehdr" x="20" y="60" width="180" height="26" rx="2"/>
+          <text class="d-name" x="32" y="78">Asset</text>
+          <text class="d-col2" x="32" y="104">base_asset — o que é medido</text>
+          <text class="d-col2" x="32" y="122">price_asset — em que moeda</text>
+          <text class="d-col2" x="32" y="140">duas FKs para a mesma tabela</text>
+
+          <line class="d-ln" x1="200" y1="105" x2="248" y2="105" marker-end="url(#m5)"/>
+
+          <rect class="d-ent" x="250" y="60" width="220" height="120" rx="2"/>
+          <rect class="d-ehdr" x="250" y="60" width="220" height="26" rx="2"/>
+          <text class="d-name" x="262" y="78">TimeSeries</text>
+          <text class="d-lbl" x="416" y="78">SHARED</text>
+          <text class="d-col2" x="262" y="104">series_name UNIQUE (ativo)</text>
+          <text class="d-col2" x="262" y="122">metric · kind · is_benchmark</text>
+          <text class="d-col2" x="262" y="140">rate_accrual · day_count</text>
+          <text class="d-col2" x="262" y="158">FK calendar_id · marking_price_option_id</text>
+
+          <line class="d-ln" x1="470" y1="120" x2="518" y2="120" marker-end="url(#m5)"/>
+          <text class="d-lbl" x="474" y="112">1:N</text>
+
+          <rect class="d-ent" x="520" y="60" width="230" height="120" rx="2"/>
+          <rect class="d-ehdr" x="520" y="60" width="230" height="26" rx="2"/>
+          <text class="d-name" x="532" y="78">TimeSeriesProvider</text>
+          <text class="d-col2" x="532" y="104">provider — Comdinheiro, Yahoo,</text>
+          <text class="d-col2" x="532" y="122">Britech, motor local Revert…</text>
+          <text class="d-col2" x="532" y="140">time_series_config JSONB</text>
+          <text class="d-col2" x="532" y="158">UK (time_series, provider) ativo</text>
+
+          <line class="d-ln" x1="635" y1="180" x2="635" y2="220"/>
+          <line class="d-ln" x1="200" y1="220" x2="880" y2="220"/>
+          <line class="d-ln" x1="290" y1="220" x2="290" y2="256" marker-end="url(#m5)"/>
+          <line class="d-ln" x1="740" y1="220" x2="740" y2="256" marker-end="url(#m5)"/>
+
+          <rect class="d-ent-v" x="130" y="258" width="320" height="130" rx="2"/>
+          <rect class="d-ehdr"  x="130" y="258" width="320" height="26" rx="2"/>
+          <text class="d-name"  x="142" y="276">DailyTimeSeries</text>
+          <text class="d-lbl"   x="378" y="276">SCHEMA PUBLIC</text>
+          <text class="d-col" x="142" y="302">series_date</text>
+          <text class="d-col" x="142" y="322">value</text>
+          <text class="d-col" x="142" y="342">time_series_provider_id</text>
+          <text class="d-lbl" x="142" y="364">UK (provider, date) entre ativos</text>
+          <text class="d-t2"  x="142" y="382">preço de ativo — igual para todo mundo</text>
+
+          <rect class="d-ent-c" x="580" y="258" width="320" height="130" rx="2"/>
+          <rect class="d-ehdr"  x="580" y="258" width="320" height="26" rx="2"/>
+          <text class="d-name"  x="592" y="276">TenantDailyTimeSeries</text>
+          <text class="d-lbl-c" x="806" y="276">POR TENANT</text>
+          <text class="d-col" x="592" y="302">series_date</text>
+          <text class="d-col" x="592" y="322">value</text>
+          <text class="d-col" x="592" y="342">time_series_provider_id</text>
+          <text class="d-col" x="592" y="362">wallet_id · is_engine_computed</text>
+          <text class="d-t2"  x="592" y="382">NAV de carteira — dado de cliente</text>
+
+          <text class="d-lbl" x="130" y="416">A definição da série (o que é medido, em que moeda, com que convenção) é compartilhada; só os valores se bifurcam. TenantDailyTimeSeries adiciona a única coluna que faz diferença: a carteira.</text>
+        </svg>
+      </div>
+      <figcaption><b>A FK atravessa a fronteira de schema na direção permitida.</b> <span class="m">TenantDailyTimeSeries</span> (tenant) referencia <span class="m">TimeSeriesProvider</span> (público) — isso funciona. O inverso não: um modelo em <span class="m">SHARED_APPS</span> não pode ter FK para um modelo <span class="m">TENANT_APPS</span>, porque a tabela alvo existe em <em>n</em> schemas e a constraint não saberia para qual apontar. Quando um modelo compartilhado precisa referenciar algo de tenant, ele guarda o nome do schema num <span class="m">CharField</span> — é o que <span class="m">DLQEntry</span> e <span class="m">SignalEventLog</span> fazem.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="shead"><span class="sref">§06</span><h2>Agregação e relatório</h2></div>
+
+    <p class="prose">Posição é por carteira; cliente pensa em portfólio. A <span class="m">Aggregation</span> é a peça que faz essa tradução, e ela é <strong>auto-referente</strong>: uma agregação pode conter outras, formando a árvore que o relatório percorre. As regras de composição são tabelas próprias em vez de campos, porque uma carteira pode entrar parcialmente numa agregação e um ativo pode ser excluído de outra.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1120 470" role="img" aria-label="Aggregation é auto-referente por uma tabela M para N de filhos; WalletSplitServiceRule liga carteira e agregação com um percentual de participação; AssetExclusionServiceRule remove ativos; PersonaAggregation liga a agregação ao cliente; e do outro lado Report, ReportConfig, CardConfig e ReportVariables montam o relatório.">
+          <defs>
+            <marker id="m6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <rect class="d-ent" x="20" y="90" width="200" height="86" rx="2"/>
+          <rect class="d-ehdr" x="20" y="90" width="200" height="26" rx="2"/>
+          <text class="d-name" x="32" y="108">Wallet</text>
+          <text class="d-col2" x="32" y="134">a conta custodiada</text>
+          <text class="d-col2" x="32" y="152">com suas Positions</text>
+
+          <rect class="d-ent-a" x="270" y="60" width="230" height="70" rx="2"/>
+          <rect class="d-ehdr"  x="270" y="60" width="230" height="26" rx="2"/>
+          <text class="d-name"  x="282" y="78">WalletSplitServiceRule</text>
+          <text class="d-col2" x="282" y="104">participation numeric(5,2)</text>
+          <text class="d-col2" x="282" y="122">UK (wallet, aggregation) ativo · CASCADE</text>
+
+          <rect class="d-ent-a" x="270" y="150" width="230" height="60" rx="2"/>
+          <rect class="d-ehdr"  x="270" y="150" width="230" height="26" rx="2"/>
+          <text class="d-name"  x="282" y="168">AssetExclusionServiceRule</text>
+          <text class="d-col2" x="282" y="194">remove ativos da visão agregada</text>
+
+          <line class="d-ln" x1="220" y1="112" x2="268" y2="95" marker-end="url(#m6)"/>
+          <line class="d-ln" x1="220" y1="140" x2="268" y2="180" marker-end="url(#m6)"/>
+
+          <rect class="d-ent-v" x="550" y="60" width="230" height="150" rx="2"/>
+          <rect class="d-ehdr"  x="550" y="60" width="230" height="26" rx="2"/>
+          <text class="d-name"  x="562" y="78">Aggregation</text>
+          <text class="d-col2" x="562" y="104">name UNIQUE entre ativas</text>
+          <text class="d-col2" x="562" y="122">aggregation_type · explode_positions</text>
+          <text class="d-col2" x="562" y="140">FK currency_id → Asset PROTECT</text>
+          <text class="d-col2" x="562" y="158">FK target_allocation_profile_id</text>
+          <text class="d-col2" x="562" y="176">FK auto_generated_config_id</text>
+          <text class="d-lbl"  x="562" y="198">M:N aggregation_children → self</text>
+
+          <line class="d-ln" x1="500" y1="95" x2="548" y2="110" marker-end="url(#m6)"/>
+          <line class="d-ln" x1="500" y1="180" x2="548" y2="140" marker-end="url(#m6)"/>
+
+          <path class="d-ln" d="M 780 100 q 50 -40 80 0" marker-end="url(#m6)"/>
+          <text class="d-lbl" x="790" y="66">árvore</text>
+
+          <rect class="d-ent" x="550" y="250" width="230" height="80" rx="2"/>
+          <rect class="d-ehdr" x="550" y="250" width="230" height="26" rx="2"/>
+          <text class="d-name" x="562" y="268">PersonaAggregation</text>
+          <text class="d-col2" x="562" y="294">tabela de ligação persona ↔ agregação</text>
+          <text class="d-col2" x="562" y="312">é o que torna um portfólio "de alguém"</text>
+          <line class="d-ln" x1="665" y1="210" x2="665" y2="248" marker-end="url(#m6)"/>
+
+          <rect class="d-ent" x="270" y="250" width="230" height="80" rx="2"/>
+          <rect class="d-ehdr" x="270" y="250" width="230" height="26" rx="2"/>
+          <text class="d-name" x="282" y="268">Persona</text>
+          <text class="d-col2" x="282" y="294">o cliente</text>
+          <text class="d-col2" x="282" y="312">raiz da RLS</text>
+          <line class="d-ln" x1="548" y1="290" x2="502" y2="290" marker-end="url(#m6)"/>
+
+          <rect class="d-ent" x="860" y="60" width="240" height="120" rx="2"/>
+          <rect class="d-ehdr" x="860" y="60" width="240" height="26" rx="2"/>
+          <text class="d-name" x="872" y="78">ReportConfig</text>
+          <text class="d-col2" x="872" y="104">um card por linha, ordenado</text>
+          <text class="d-col2" x="872" y="122">FK aggregation_id PROTECT</text>
+          <text class="d-col2" x="872" y="140">FK card_config_id PROTECT</text>
+          <text class="d-col2" x="872" y="158">FK report_id CASCADE</text>
+          <line class="d-ln" x1="782" y1="130" x2="858" y2="118" marker-end="url(#m6)"/>
+
+          <rect class="d-ent" x="860" y="200" width="240" height="70" rx="2"/>
+          <rect class="d-ehdr" x="860" y="200" width="240" height="26" rx="2"/>
+          <text class="d-name" x="872" y="218">CardConfig</text>
+          <text class="d-col2" x="872" y="244">config JSONB validado por schema</text>
+          <text class="d-col2" x="872" y="262">{"components": [...]}</text>
+          <line class="d-ln" x1="980" y1="198" x2="980" y2="182" marker-end="url(#m6)"/>
+
+          <rect class="d-ent" x="860" y="290" width="240" height="60" rx="2"/>
+          <rect class="d-ehdr" x="860" y="290" width="240" height="26" rx="2"/>
+          <text class="d-name" x="872" y="308">Report</text>
+          <text class="d-col2" x="872" y="334">M:N clients · M:N alerts</text>
+
+          <rect class="d-ent-c" x="550" y="370" width="550" height="76" rx="2"/>
+          <rect class="d-ehdr"  x="550" y="370" width="550" height="26" rx="2"/>
+          <text class="d-name"  x="562" y="388">ReportVariables</text>
+          <text class="d-lbl-c" x="980" y="388">SNAPSHOT DO CLIENTE</text>
+          <text class="d-col2" x="562" y="414">variable_value JSONB — a fotografia completa do portfólio naquela data</text>
+          <text class="d-col2" x="562" y="432">report_date · status · auto_check_ok · link_uuid · access_password · sent_at · checked_by</text>
+          <line class="d-ln" x1="900" y1="350" x2="860" y2="368" marker-end="url(#m6)"/>
+
+          <text class="d-lbl" x="20" y="410">O relatório não guarda números</text>
+          <text class="d-lbl" x="20" y="428">soltos: guarda um JSON versionado,</text>
+          <text class="d-lbl" x="20" y="446">o que permite reemitir exatamente</text>
+          <text class="d-lbl" x="20" y="464">o que o cliente viu.</text>
+        </svg>
+      </div>
+      <figcaption><b>A <span class="m">participation</span> é o motivo de a regra ser uma tabela.</b> Uma carteira conjunta entra 50% no portfólio de cada cônjuge; o campo <span class="m">numeric(5,2)</span> na <span class="m">WalletSplitServiceRule</span> é o que permite isso sem duplicar posições. Ambas as regras têm unicidade parcial em <span class="m">(wallet, aggregation)</span> entre linhas ativas — e são das poucas FKs <span class="m">CASCADE</span> do esquema, justificadas porque a regra não tem sentido sem a agregação que ela configura.</figcaption>
+    </figure>
+
+    <h3>Billing, no fim da linha</h3>
+    <p class="prose">A cobrança lê a série de NAV produzida pelas posições e materializa <span class="m">Invoice</span>. A configuração é intencionalmente estratificada: um <span class="m">BillingConfigurationTemplate</span> por moeda define o padrão, a <span class="m">BillingConfiguration</span> especializa por carteira, e um <span class="m">BillingFeeTierGroup</span> com seus <span class="m">BillingFeeTier</span> descreve a escada de taxa por faixa de patrimônio — cada faixa com seu <span class="m">lower_bound</span>, <span class="m">upper_bound</span>, taxa de gestão, taxa de performance e o benchmark (uma FK para <span class="m">TimeSeries</span>) contra o qual a performance é medida. A <span class="m">Invoice</span> separa <span class="m">origin_wallet</span> de <span class="m">charged_wallet</span>, porque a conta que gera a taxa nem sempre é a que paga.</p>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="shead"><span class="sref">§07</span><h2>Como a topologia de FK vira política de acesso</h2></div>
+
+    <p class="prose">A Row-Level Security não é escrita à mão tabela por tabela. Existe um <strong>registro declarativo</strong> que descreve, para cada tabela, <em>como se chega dela até a Persona</em> — e é dele que as políticas do PostgreSQL são geradas em tempo de migration. Hoje são 81 tabelas registradas, cada uma com um dos cinco tipos de ligação.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1060 440" role="img" aria-label="A tabela persona_persona é a raiz protegida por um orquestrador. Cinco tipos de ligação derivam a visibilidade das demais tabelas: FKFromParent, FKToParent, M2MAutoJoin, ThroughTableColumn e UnionOfLinkages. Um teste de cobertura falha se uma nova chave estrangeira para Persona não for registrada.">
+          <defs>
+            <marker id="m7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head-c" points="0,1 10,5 0,9"/>
+            </marker>
+          </defs>
+
+          <rect class="d-ent-c" x="400" y="40" width="270" height="86" rx="2"/>
+          <rect class="d-ehdr"  x="400" y="40" width="270" height="26" rx="2"/>
+          <text class="d-name"  x="412" y="58">persona_persona</text>
+          <text class="d-lbl-c" x="592" y="58">RAIZ</text>
+          <text class="d-col2" x="412" y="84">tabela protegida com orquestrador próprio</text>
+          <text class="d-col2" x="412" y="102">a política é construída por calculators</text>
+          <text class="d-col2" x="412" y="120">e combinada por orchestrators</text>
+
+          <line class="d-ln-c" x1="535" y1="126" x2="535" y2="152"/>
+          <line class="d-ln-c" x1="120" y1="152" x2="950" y2="152"/>
+          <line class="d-ln-c" x1="120" y1="152" x2="120" y2="188" marker-end="url(#m7)"/>
+          <line class="d-ln-c" x1="330" y1="152" x2="330" y2="188" marker-end="url(#m7)"/>
+          <line class="d-ln-c" x1="535" y1="152" x2="535" y2="188" marker-end="url(#m7)"/>
+          <line class="d-ln-c" x1="740" y1="152" x2="740" y2="188" marker-end="url(#m7)"/>
+          <line class="d-ln-c" x1="950" y1="152" x2="950" y2="188" marker-end="url(#m7)"/>
+
+          <rect class="d-ent" x="20" y="190" width="195" height="120" rx="2"/>
+          <rect class="d-ehdr" x="20" y="190" width="195" height="26" rx="2"/>
+          <text class="d-name" x="32" y="208">FKFromParent</text>
+          <text class="d-col2" x="32" y="234">a Persona aponta para a tabela</text>
+          <text class="d-col2" x="32" y="256">persona.personal_info_id</text>
+          <text class="d-col2" x="32" y="274">→ persona_personalinfo</text>
+          <text class="d-lbl"  x="32" y="298">satélites de identidade</text>
+
+          <rect class="d-ent" x="235" y="190" width="195" height="120" rx="2"/>
+          <rect class="d-ehdr" x="235" y="190" width="195" height="26" rx="2"/>
+          <text class="d-name" x="247" y="208">FKToParent</text>
+          <text class="d-col2" x="247" y="234">a tabela aponta para a Persona</text>
+          <text class="d-col2" x="247" y="256">messages.persona_id</text>
+          <text class="d-col2" x="247" y="274">→ visível com a persona</text>
+          <text class="d-lbl"  x="247" y="298">o caso mais comum</text>
+
+          <rect class="d-ent" x="450" y="190" width="195" height="120" rx="2"/>
+          <rect class="d-ehdr" x="450" y="190" width="195" height="26" rx="2"/>
+          <text class="d-name" x="462" y="208">M2MAutoJoin</text>
+          <text class="d-col2" x="462" y="234">passa pela tabela de junção</text>
+          <text class="d-col2" x="462" y="256">persona_persona_full_address</text>
+          <text class="d-col2" x="462" y="274">→ persona_fulladdress</text>
+          <text class="d-lbl"  x="462" y="298">a junção também é protegida</text>
+
+          <rect class="d-ent" x="665" y="190" width="195" height="120" rx="2"/>
+          <rect class="d-ehdr" x="665" y="190" width="195" height="26" rx="2"/>
+          <text class="d-name" x="677" y="208">ThroughTableColumn</text>
+          <text class="d-col2" x="677" y="234">chega por uma coluna de uma</text>
+          <text class="d-col2" x="677" y="256">tabela intermediária já protegida</text>
+          <text class="d-lbl"  x="677" y="298">cadeias de dois saltos</text>
+
+          <rect class="d-ent" x="880" y="190" width="160" height="120" rx="2"/>
+          <rect class="d-ehdr" x="880" y="190" width="160" height="26" rx="2"/>
+          <text class="d-name" x="892" y="208">UnionOfLinkages</text>
+          <text class="d-col2" x="892" y="234">visível por mais de</text>
+          <text class="d-col2" x="892" y="256">um caminho</text>
+          <text class="d-lbl"  x="892" y="298">+ SoftlyProtect</text>
+
+          <rect class="d-ent-c" x="20" y="336" width="1020" height="84" rx="2"/>
+          <text class="d-t"     x="34" y="360">rls/tests/test_related_rls_coverage.py</text>
+          <text class="d-lbl-c" x="34" y="380">Adicionar uma FK ou M2M para Persona sem registrar a tabela — e sem declará-la explicitamente em PERSONA_INTENTIONALLY_UNPROPAGATED —</text>
+          <text class="d-lbl-c" x="34" y="398">reprova este teste. É o que transforma "esqueci de proteger a tabela nova" de um vazamento silencioso em um build vermelho.</text>
+          <text class="d-lbl"   x="34" y="416">Cada entrada gera um proxy sintético que pega carona no post_migrate do django-rls e executa ALTER TABLE … ENABLE RLS + CREATE POLICY, sem tocar no arquivo do modelo original.</text>
+        </svg>
+      </div>
+      <figcaption><b>O bug aqui é uma ausência, e ausências não quebram nada.</b> Uma tabela nova com dados de cliente que não esteja no registro simplesmente não recebe política — ela fica visível para todos os consultores dentro do tenant compartilhado <span class="m">revertai</span>, sem erro, sem log, sem teste vermelho. O teste de cobertura existe exatamente para converter esse silêncio em falha: ele varre as relações do modelo <span class="m">Persona</span> e exige que cada uma esteja registrada ou explicitamente marcada como não propagável.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="shead"><span class="sref">§08</span><h2>Padrões transversais</h2></div>
+
+    <div class="cols">
+      <div>
+        <h3>Chave estrangeira genérica</h3>
+        <p>Três lugares usam <span class="m">content_type_id + object_id</span> para apontar para qualquer tabela: <span class="m">BrokerDataLink</span> (qual objeto normalizado esta linha crua gerou), <span class="m">custom_fields.AttributeValue</span> (atributos livres que qualquer modelo pode ganhar, expostos pelo <span class="m">CustomAttributesMixin</span> em <span class="m">Wallet</span> e <span class="m">Asset</span>) e <span class="m">correlation</span> (agrupar linhas de um mesmo processo). É integridade referencial trocada por flexibilidade — e por isso o uso é contido a esses três casos.</p>
+      </div>
+      <div>
+        <h3>Views materializadas</h3>
+        <p>Três tipos convivem. <span class="m">EmployeeClientPersonaMV</span> resolve a cadeia funcionário → time → grupo → cliente, que a RLS consulta a cada query. <span class="m">AssetTimeSeriesMaterializedView</span> achata a cadeia série → provedor → valor diário. E as <span class="m">mv_aggregation_*</span> são temporárias: criadas durante a geração de um relatório e derrubadas num <span class="m">finally</span> — se o processo morre no meio, ficam órfãs no schema.</p>
+      </div>
+      <div>
+        <h3>JSON com contrato</h3>
+        <p>Colunas <span class="m">JSONB</span> aparecem onde a forma é genuinamente variável: <span class="m">raw_data</span> do custodiante, <span class="m">comparison</span> da conciliação, <span class="m">variable_value</span> do relatório, <span class="m">trade_properties</span>, <span class="m">config</span> do card. As que têm forma esperada são validadas por <span class="m">JSONSchemaValidator</span>, com os schemas num registro central no app <span class="m">validators</span> — o JSON é livre no banco, não na aplicação.</p>
+      </div>
+      <div>
+        <h3>Vetores</h3>
+        <p><span class="m">AgentMemoryEntry.embedding</span> é um <span class="m">VectorField(768)</span> do pgvector com índice HNSW, na mesma instância do Postgres — não há banco vetorial separado. A dimensão e o modelo (<span class="m">text-embedding-3-small</span>) são declarados uma única vez no conector, e cada linha guarda em <span class="m">embedding_model</span> qual modelo a produziu, para que uma troca de modelo não misture vetores incomparáveis.</p>
+      </div>
+      <div>
+        <h3>Índices parciais</h3>
+        <p>Quase todo índice do esquema carrega <span class="m">condition=Q(is_active=True)</span>. Como o soft delete mantém a linha na tabela, um índice completo indexaria também tudo que foi apagado. Índices parciais mantêm a estrutura proporcional aos dados vivos — e são a razão pela qual soft delete só deve ser usado onde realmente importa, como diz o padrão do repositório.</p>
+      </div>
+      <div>
+        <h3>Idempotência</h3>
+        <p>Ingestão externa se repete: o mesmo webhook chega duas vezes, o mesmo arquivo é reprocessado. O esquema absorve isso com <span class="m">MovementInserter.idempotency_key</span> (UNIQUE), <span class="m">BrokerData.raw_data_hash</span> + <span class="m">idempotency_key</span>, e <span class="m">BrokerMovement.raw_data_hash</span> como <span class="m">GeneratedField</span> — calculada pelo banco a partir do payload, não pela aplicação.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section>
+    <div class="shead"><span class="sref">§09</span><h2>Inventário por região do esquema</h2></div>
+
+    <p class="prose">As entidades que sustentam cada domínio, com a camada em que a tabela vive. <span class="m">SHARED</span> existe uma vez no schema <span class="m">public</span>; <span class="m">TENANT</span> é replicada em cada schema.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Domínio</th><th>Camada</th><th>Entidades</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Tenancy</td><td class="t">SHARED</td><td><span class="m">Tenant</span> (django-tenants, <span class="m">auto_create_schema</span>), <span class="m">Domain</span>, <span class="m">Company</span> (marca, cores, logos do relatório)</td></tr>
+          <tr><td class="k">Identidade</td><td class="t">TENANT</td><td><span class="m">Persona</span>, <span class="m">PersonalInfo</span>, <span class="m">PersonalDocument</span>, <span class="m">ContactInfo</span>, <span class="m">FullAddress</span>, <span class="m">CompanyInfo</span>, <span class="m">AnbimaInfo</span>, <span class="m">PersonaGroup</span>, <span class="m">Employee</span>, <span class="m">AdvisorProfile</span>, <span class="m">EmployeeCertification</span>, <span class="m">EmployeeClientPersonaMV</span> — 20 modelos</td></tr>
+          <tr><td class="k">Identidade pública</td><td class="t">SHARED</td><td><span class="m">Party</span> — entidade independente de schema, para o que precisa existir fora do tenant</td></tr>
+          <tr><td class="k">Custódia</td><td class="t">TENANT / SHARED</td><td><span class="m">Wallet</span>, <span class="m">BillingWallet</span>, <span class="m">AccountTransferInfo</span> (tenant) · <span class="m">Broker</span> (shared)</td></tr>
+          <tr><td class="k">Catálogo de ativos</td><td class="t">SHARED</td><td><span class="m">Asset</span> + 7 subtipos, <span class="m">RiskClass</span>, <span class="m">RiskVector</span>, <span class="m">AssetSubclass</span>, <span class="m">Exchange</span>, <span class="m">Issuer</span>, <span class="m">DraftAsset</span>, <span class="m">AssetSuggestion</span>, <span class="m">AssetFieldOptions</span> — 16 modelos</td></tr>
+          <tr><td class="k">Overlay de ativos</td><td class="t">TENANT</td><td><span class="m">tenant_assets</span> — renomeações e reclassificações por tenant sobre o catálogo compartilhado</td></tr>
+          <tr><td class="k">Movimentação e posição</td><td class="t">TENANT</td><td><span class="m">MovementInserter</span>, <span class="m">MovementBooking</span>, <span class="m">Position</span>, <span class="m">PositionHistoryContext</span>, <span class="m">BrokerData</span>, <span class="m">BrokerDataLink</span>, <span class="m">BrokerMovement</span>, <span class="m">BrokerPosition</span>, <span class="m">BrokerBalance</span>, <span class="m">CorporateAction</span>, <span class="m">InvalidData</span>, <span class="m">RequestLog</span>, <span class="m">ReprocessSchedule</span> — 16 modelos</td></tr>
+          <tr><td class="k">Conciliação</td><td class="t">TENANT</td><td><span class="m">Conciliation</span>, <span class="m">ConciliationMetadata</span> (mapa de margens), <span class="m">Anomaly</span>, <span class="m">ConciliationEODStatus</span></td></tr>
+          <tr><td class="k">Fluxo de caixa</td><td class="t">TENANT</td><td><span class="m">InflowOutflow</span> (verdade Nix) e <span class="m">BrokerInflowOutflow</span> (reportado) — o trilho duplo se repete aqui</td></tr>
+          <tr><td class="k">Séries e preço</td><td class="t">SHARED / TENANT</td><td><span class="m">TimeSeries</span>, <span class="m">TimeSeriesProvider</span>, <span class="m">DailyTimeSeries</span>, <span class="m">AssetTimeSeriesFetchAttempt</span>, <span class="m">Calendar</span> (shared) · <span class="m">TenantDailyTimeSeries</span> (tenant) · <span class="m">MarkingMethod</span>, <span class="m">MarkingPriceOption</span> no motor de precificação</td></tr>
+          <tr><td class="k">Agregação</td><td class="t">TENANT</td><td><span class="m">Aggregation</span>, <span class="m">PersonaAggregation</span>, <span class="m">WalletSplitServiceRule</span>, <span class="m">AssetExclusionServiceRule</span>, <span class="m">AggregationGeneratorConfig</span>, <span class="m">GeneratorConfigFilter</span></td></tr>
+          <tr><td class="k">Relatório</td><td class="t">TENANT</td><td><span class="m">Report</span>, <span class="m">ReportConfig</span>, <span class="m">CardConfig</span>, <span class="m">ReportDefaultCardsConfig</span>, <span class="m">ReportPersonaAggregation</span>, <span class="m">ReportVariables</span>, <span class="m">CacheDashboard</span></td></tr>
+          <tr><td class="k">Cobrança</td><td class="t">TENANT</td><td><span class="m">BillingConfiguration</span>, <span class="m">BillingConfigurationTemplate</span>, <span class="m">BillingFeeTierGroup</span>, <span class="m">BillingFeeTier</span>, <span class="m">Invoice</span></td></tr>
+          <tr><td class="k">Tradução</td><td class="t">SHARED</td><td><span class="m">Symbology</span> — a tabela que mapeia identificador externo para o valor Nix, por campo e por fonte, com busca case-insensitive e índice parcial de lookup</td></tr>
+          <tr><td class="k">Segurança</td><td class="t">SHARED</td><td>proxies sintéticos do <span class="m">rls</span> (81 linkages + 4 raízes protegidas), <span class="m">AgentAuth</span> (header opaco → tenant + JWT)</td></tr>
+          <tr><td class="k">Infra assíncrona</td><td class="t">SHARED</td><td><span class="m">DLQEntry</span>, <span class="m">SignalEventLog</span>, <span class="m">QueueDashboard</span> (proxy sem tabela), <span class="m">KombuMessage</span> / <span class="m">KombuQueue</span> (views das tabelas do broker)</td></tr>
+          <tr><td class="k">Conversa e agentes</td><td class="t">TENANT</td><td><span class="m">Message</span>, <span class="m">ChannelValue</span>, <span class="m">MessagingActor</span>, <span class="m">ConversationReadState</span>, <span class="m">Correlation</span>, <span class="m">MiddleTask</span>, <span class="m">ClientChatHistory</span>, <span class="m">ChatSession</span>, <span class="m">AgentChannelConfig</span>, <span class="m">PendingPacmanFile</span>, <span class="m">AgentMemoryEntry</span>, <span class="m">AgentReminder</span></td></tr>
+          <tr><td class="k">Operação</td><td class="t">TENANT</td><td><span class="m">Task</span>, <span class="m">OpsStatus</span>, <span class="m">PendingData</span>, <span class="m">DashPipelineStage</span>, <span class="m">Appointment</span> / <span class="m">AvailabilityRule</span> / <span class="m">TimeBlock</span> (agenda), <span class="m">Document</span>, <span class="m">UserAction</span>, <span class="m">Alert</span>, <span class="m">CommunicationLog</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend">
+      <span><span class="tag pk">PK</span> chave primária — sempre <span class="m">bigint</span> autoincremento</span>
+      <span><span class="tag fk">FK</span> chave estrangeira</span>
+      <span><span class="tag uk">UK</span> unicidade, quase sempre parcial em <span class="m">is_active</span></span>
+      <span><span class="tag pii">PII</span> dado pessoal com mascaramento no modelo</span>
+    </div>
+  </section>
+
+  <footer>
+    Modelagem extraída do código-fonte de <span class="m">Revert-AI/nix_webserver</span> (branch <span class="m">main</span>): 221 classes de modelo em 55 apps, com as constraints, índices e <span class="m">Meta</span> lidos diretamente dos arquivos. Contagens verificadas no clone. Documento complementar ao desenho de arquitetura — este descreve o esquema; aquele, os processos que escrevem nele.
+  </footer>
+
+</div>
+
+</body>
+</html>
