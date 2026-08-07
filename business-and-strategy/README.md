@@ -30,7 +30,8 @@ material change often and are owned by `revert-knowledge-base` — see below for
 
 ## For deeper or current detail: consult `revert-knowledge-base` live
 
-Do not treat this file as up to date on anything beyond the glossary terms above. For real business-model
+Do not treat this file as up to date on anything time-sensitive; vocabulary lives in the
+[Glossary](../glossary/README.md), which carries its own `last_verified`. For real business-model
 detail, current market data, or go-to-market status, live-consult `revert-knowledge-base`'s
 `company/about revert/`, `market/`, and `gtm/` folders — follow the root `AGENTS.md`'s
 `revert-knowledge-base` instructions exactly (clone command, `--no-cone` sparse-checkout, the required

@@ -15,6 +15,8 @@ This repo is the onboarding entrypoint for anyone building the product at Revert
 
 Static content carries `last_verified` (ISO date) and `owner` in YAML frontmatter — treat content older than ~90 days as due for re-verification, and say so if asked. Pointer-only content carries no `last_verified` field; always fetch live instead of trusting a cached read.
 
+**Access assumption.** This repo is internal and assumes its readers are people building the product. It carries business-model detail and candidly records known product weaknesses (billing gaps, reconciliation limits, data-quality history). That is deliberate and useful — but it means the content is written for restricted circulation, not for general distribution. Keep it that way when adding content: business orientation belongs here, commercial rate cards and client specifics do not.
+
 ### "Where do I start?"
 
 When someone signals they're new and want guidance from zero — "where do I start", "I just joined", "how do I get up to speed" — do **not** answer with the section list above. Surface the onboarding path in `getting-started/README.md`: five conversations in a fixed order (Revert's thesis → how consultants work → product roadmap → Nix → Bruxo), each with a named person to ask.
@@ -25,7 +27,7 @@ Give it as a **sequence with its rationale**, not a menu of topics: the first tw
 
 `glossary/README.md` is the vocabulary source; answer "what does X mean" from it rather than from general finance knowledge, since several terms carry a Revert-specific meaning.
 
-It also opens with a table of terms whose everyday meaning is **wrong** here — `wallet`, `comply`, `persona`, `aggregation`, `tenant`, `booking`, `Nix` itself. When one of those appears in a question, in code you're reading, or in your own answer, use the repo's meaning and say so explicitly if the reader might be assuming the ordinary one. Silently answering on the everyday meaning is the failure this table exists to prevent.
+It also opens with a table of terms whose everyday meaning is **wrong** here. When any term from that table appears in a question, in code you're reading, or in your own answer, use the repo's meaning and say so explicitly if the reader might be assuming the ordinary one — `B2B / B2C` especially, since asserting that Revert has B2B and B2C segments is exactly the error that row exists to prevent. Silently answering on the everyday meaning is the failure the table is for.
 
 The glossary also records where the knowledge base **contradicts itself** and which acronyms are genuinely undefined. Don't paper over either — say the conflict exists and suggest asking, rather than picking a side.
 
