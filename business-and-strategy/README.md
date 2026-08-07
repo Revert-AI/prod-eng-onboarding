@@ -3,33 +3,16 @@ last_verified: 2026-08-06
 owner: TBD (repo maintainer — update to whoever owns this content)
 ---
 
-# Business, Strategy & Financial Glossary
+# Business & Strategy
 
 This section is a **thin static overview**, not the source of truth. It exists so a reader gets useful
 orientation immediately; anything deeper or time-sensitive should be pulled live from
 `revert-knowledge-base` per the instructions below, not from this file.
 
-## Financial glossary
-
-A few terms that recur across Revert's business and market discussions:
-
-- **AUM (Assets Under Management)** — the total client assets a firm (or Revert's advisor network) manages;
-  the standard unit used to size the wealth-management market and individual books of business.
-- **Fee-based vs. commission-based** — the two dominant advisory revenue models. Commission-based pays the
-  advisor per product sold; fee-based charges a transparent percentage of AUM. Brazil's market is described
-  as still commission-heavy today, transitioning toward fee-based — a trend already further along in the US
-  and largely completed in Europe.
-- **ROA (Return on Assets)** — a fee-rate benchmark expressed as a percentage of AUM; used in market
-  discussions as shorthand for how much revenue a firm or advisor generates per unit of assets managed.
-- **Full Service vs. Tech Service** — Revert's own two business-model tracks. Full Service means Revert
-  operates the entire consultancy for an independent advisor (compliance, tech, billing, the works). Tech
-  Service meant selling backend technology to existing wealth firms. As of the most recent internal update,
-  Full Service is the only active model; Tech Service is kept as historical reference only.
-- **PJ2** — Revert's term for cross-sell revenue lines layered on top of the core advisory fee (e.g.
-  insurance, credit, consortium, FX), rather than a data field. It's product terminology internal to Revert.
-- **Consultor vs. Assessor** — the two investment-advisor archetypes central to the market thesis: a
-  *consultor* is a CVM-registered independent investment consultant paid directly by the client; an
-  *assessor* is affiliated with and paid indirectly through a brokerage.
+**Looking for vocabulary?** The business, market and product terms — AUM, fee-based vs. commission-based,
+Full Service, *consultor* vs. *assessor*, and the terms that commonly get misread — live in the
+[Glossary](../glossary/README.md). They are deliberately not duplicated here; one copy that stays right
+beats two that drift.
 
 ## Strategy framing
 

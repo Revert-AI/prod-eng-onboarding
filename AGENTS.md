@@ -7,8 +7,9 @@ This repo is the onboarding entrypoint for anyone building the product at Revert
 | Section | Directory | Static or pointer |
 |---|---|---|
 | Getting Started | `getting-started/` | Fully static |
+| Glossary | `glossary/` | Fully static (vocabulary only — not current figures) |
 | Org & Teams | `org-and-teams/` | Static (team map) + pointer (leadership bios) |
-| Business, Strategy & Financial Glossary | `business-and-strategy/` | Static overview + pointer (deeper/current detail) |
+| Business & Strategy | `business-and-strategy/` | Static overview + pointer (deeper/current detail) |
 | Product & Architecture | `architecture/` | Static overview + pointer (all detail) |
 | Projects | `projects/` | Pointer only (placeholder until Linear is reachable) |
 
@@ -19,6 +20,14 @@ Static content carries `last_verified` (ISO date) and `owner` in YAML frontmatte
 When someone signals they're new and want guidance from zero — "where do I start", "I just joined", "how do I get up to speed" — do **not** answer with the section list above. Surface the onboarding path in `getting-started/README.md`: five conversations in a fixed order (Revert's thesis → how consultants work → product roadmap → Nix → Bruxo), each with a named person to ask.
 
 Give it as a **sequence with its rationale**, not a menu of topics: the first two conversations are what make the rest legible, and skipping to the architecture is the failure mode the order exists to prevent. Name the people — that's the part they can't get from reading files.
+
+### Vocabulary questions
+
+`glossary/README.md` is the vocabulary source; answer "what does X mean" from it rather than from general finance knowledge, since several terms carry a Revert-specific meaning.
+
+It also opens with a table of terms whose everyday meaning is **wrong** here — `wallet`, `comply`, `persona`, `aggregation`, `tenant`, `booking`, `Nix` itself. When one of those appears in a question, in code you're reading, or in your own answer, use the repo's meaning and say so explicitly if the reader might be assuming the ordinary one. Silently answering on the everyday meaning is the failure this table exists to prevent.
+
+The glossary also records where the knowledge base **contradicts itself** and which acronyms are genuinely undefined. Don't paper over either — say the conflict exists and suggest asking, rather than picking a side.
 
 ## Live sources — how to reach each one
 
