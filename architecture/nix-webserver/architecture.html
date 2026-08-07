@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>nix_webserver — Arquitetura</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper:   #EDEFEC;
+    --panel:   #F7F8F6;
+    --panel-2: #E3E7E3;
+    --ink:     #0C1D20;
+    --muted:   #56696A;
+    --line:    #C6D0CC;
+    --line-2:  #A9B7B3;
+    --verd:    #14675E;
+    --amber:   #9A5B06;
+    --crimson: #93262B;
+
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", Charter, "Bitstream Charter", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:   #0A1517;
+      --panel:   #101F1F;
+      --panel-2: #16292A;
+      --ink:     #DCE6E2;
+      --muted:   #8CA29F;
+      --line:    #263A38;
+      --line-2:  #37504D;
+      --verd:    #62BFAF;
+      --amber:   #E0A653;
+      --crimson: #E2727A;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:   #0A1517;
+    --panel:   #101F1F;
+    --panel-2: #16292A;
+    --ink:     #DCE6E2;
+    --muted:   #8CA29F;
+    --line:    #263A38;
+    --line-2:  #37504D;
+    --verd:    #62BFAF;
+    --amber:   #E0A653;
+    --crimson: #E2727A;
+  }
+
+  :root[data-theme="light"] {
+    --paper:   #EDEFEC;
+    --panel:   #F7F8F6;
+    --panel-2: #E3E7E3;
+    --ink:     #0C1D20;
+    --muted:   #56696A;
+    --line:    #C6D0CC;
+    --line-2:  #A9B7B3;
+    --verd:    #14675E;
+    --amber:   #9A5B06;
+    --crimson: #93262B;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 56px 28px 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .prose { max-width: 70ch; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { display: flex; flex-direction: column; gap: 18px; padding-bottom: 34px; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--verd);
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(30px, 5vw, 46px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .lede {
+    max-width: 66ch;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-top: 12px;
+  }
+  .fact { background: var(--paper); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .fact b {
+    font-family: var(--sans);
+    font-variant-numeric: tabular-nums;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .fact span {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding: 46px 0 6px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 20px; }
+
+  .shead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .sref {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--verd);
+    letter-spacing: .06em;
+    padding-top: 2px;
+  }
+  h2 {
+    font-family: var(--mono);
+    font-size: clamp(20px, 2.6vw, 27px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; }
+  .prose + .prose { margin-top: -6px; }
+
+  a { color: var(--verd); text-underline-offset: 2px; }
+
+  strong { font-weight: 600; }
+
+  code, .m {
+    font-family: var(--mono);
+    font-size: .86em;
+    background: var(--panel-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  /* ---------- figures ---------- */
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--panel); padding: 18px; }
+  svg.diagram { display: block; width: 100%; min-width: 720px; height: auto; }
+  figcaption {
+    font-family: var(--sans);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 88ch;
+  }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  /* svg primitives */
+  .d-group { fill: none; stroke: var(--line-2); stroke-dasharray: 3 3; }
+  .d-box   { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 1; }
+  .d-box-q { fill: none; stroke: var(--line-2); stroke-width: 1; stroke-dasharray: 4 3; }
+  .d-box-a { fill: none; stroke: var(--amber); stroke-width: 1.4; }
+  .d-box-c { fill: none; stroke: var(--crimson); stroke-width: 1.4; stroke-dasharray: 5 3; }
+  .d-box-v { fill: none; stroke: var(--verd); stroke-width: 1.4; }
+  .d-t     { fill: var(--ink); font-family: var(--sans); font-size: 12.5px; }
+  .d-t2    { fill: var(--muted); font-family: var(--sans); font-size: 10.5px; }
+  .d-hdr   { fill: var(--verd); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; }
+  .d-num   { fill: var(--verd); font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .d-lbl   { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+  .d-lbl-a { fill: var(--amber); font-family: var(--mono); font-size: 10px; }
+  .d-lbl-c { fill: var(--crimson); font-family: var(--mono); font-size: 10px; }
+  .d-ln    { stroke: var(--line-2); stroke-width: 1.2; fill: none; }
+  .d-ln-d  { stroke: var(--line-2); stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; }
+  .d-ln-a  { stroke: var(--amber); stroke-width: 1.6; fill: none; }
+  .d-ln-c  { stroke: var(--crimson); stroke-width: 1.4; fill: none; }
+  .d-head   { fill: var(--line-2); }
+  .d-head-a { fill: var(--amber); }
+  .d-head-c { fill: var(--crimson); }
+
+  /* ---------- tables ---------- */
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 13.5px; background: var(--panel); }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--panel-2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.k { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---------- app map ---------- */
+
+  .maplane { display: flex; flex-direction: column; gap: 10px; }
+  .lanehead { display: flex; align-items: baseline; gap: 10px; }
+  .lanetag {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--paper); background: var(--verd); padding: 2px 7px;
+  }
+  .lanenote { font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+  .chipgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .chip { background: var(--panel); padding: 9px 12px; display: flex; gap: 9px; align-items: flex-start; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 7px; flex: 0 0 7px; }
+  .s-high { background: var(--crimson); }
+  .s-med  { background: var(--amber); }
+  .s-low  { background: var(--muted); }
+  .s-none { background: transparent; box-shadow: inset 0 0 0 1px var(--line-2); }
+  .chip div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .chip b { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+  .chip span { font-family: var(--sans); font-size: 11.5px; line-height: 1.35; color: var(--muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+  .legend i { display: inline-flex; align-items: center; gap: 7px; font-style: normal; }
+
+  /* ---------- callouts ---------- */
+
+  .callout {
+    border-left: 3px solid var(--crimson);
+    background: var(--panel);
+    padding: 14px 18px;
+    max-width: 78ch;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .callout.v { border-left-color: var(--verd); }
+  .callout.a { border-left-color: var(--amber); }
+  .callout b { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--crimson); }
+  .callout.v b { color: var(--verd); }
+  .callout.a b { color: var(--amber); }
+  .callout p { font-size: 15.5px; line-height: 1.55; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
+  .cols > div { display: flex; flex-direction: column; gap: 8px; }
+  .cols p { font-size: 15.5px; }
+
+  ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 5px; max-width: 74ch; }
+  li::marker { color: var(--muted); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 46px;
+    padding-top: 20px;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--muted);
+    max-width: 80ch;
+  }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding: 36px 18px 80px; }
+    .scroll { padding: 12px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Revert AI · back-office-as-a-service · documento de engenharia</div>
+    <h1>nix_webserver</h1>
+    <p class="lede">Plataforma Django/DRF multi-tenant que roda o back-office completo de gestores de patrimônio: ingestão de movimentações, conciliação contra custodiantes, cálculo de posições, agregação em portfólios, geração de relatórios ao cliente e cobrança — com uma camada agêntica de LLMs operando por cima de tudo isso.</p>
+
+    <div class="facts">
+      <div class="fact"><b>60</b><span>apps Django</span></div>
+      <div class="fact"><b>~492k</b><span>linhas Python</span></div>
+      <div class="fact"><b>282</b><span>rotas no router</span></div>
+      <div class="fact"><b>288</b><span>ViewSets</span></div>
+      <div class="fact"><b>188</b><span>modelos</span></div>
+      <div class="fact"><b>79</b><span>tasks Celery</span></div>
+      <div class="fact"><b>914</b><span>migrations</span></div>
+      <div class="fact"><b>1.125</b><span>arquivos de teste</span></div>
+    </div>
+  </header>
+
+  <!-- ============ 01 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§01</span><h2>Topologia de runtime</h2></div>
+
+    <p class="prose">Um único artefato — a imagem <span class="m">linux/arm64</span> construída a partir de <span class="m">pipeline/docker/production.Dockerfile</span> (Python 3.11-alpine, com as libs nativas do WeasyPrint para gerar PDF) — sobe como <strong>cinco serviços ECS Fargate distintos</strong>, que se diferenciam apenas pelo comando. O front-end é um projeto separado (<span class="m">portal_v2</span>, React + TypeScript); este repositório é exclusivamente a API e os workers.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1160 560" role="img" aria-label="Topologia de runtime: consumidores entram por Route 53 e ALB, chegam ao cluster ECS Fargate com cinco serviços mais o gateway Evolution, que falam com RDS PostgreSQL, ElastiCache Redis, S3, Secrets Manager, ECR, CloudWatch, Sentry e New Relic.">
+          <defs>
+            <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <text class="d-hdr" x="16" y="16">CONSUMIDORES</text>
+          <rect class="d-box" x="16" y="48" width="180" height="46" rx="2"/>
+          <text class="d-t"  x="28" y="70">Ekho Portal</text>
+          <text class="d-t2" x="28" y="85">React + TypeScript (portal_v2)</text>
+          <rect class="d-box" x="16" y="106" width="180" height="46" rx="2"/>
+          <text class="d-t"  x="28" y="128">Landing page</text>
+          <text class="d-t2" x="28" y="143">captura de leads · marketing</text>
+          <rect class="d-box" x="16" y="164" width="180" height="46" rx="2"/>
+          <text class="d-t"  x="28" y="186">WhatsApp do investidor</text>
+          <text class="d-t2" x="28" y="201">Meta → Evolution</text>
+          <rect class="d-box" x="16" y="222" width="180" height="46" rx="2"/>
+          <text class="d-t"  x="28" y="244">Webhooks custodiantes</text>
+          <text class="d-t2" x="28" y="259">BTG PSF · BTG movimentos</text>
+          <rect class="d-box" x="16" y="280" width="180" height="46" rx="2"/>
+          <text class="d-t"  x="28" y="302">Agentes LLM (OpenClaw)</text>
+          <text class="d-t2" x="28" y="317">callback com X-Agent-Id</text>
+          <rect class="d-box" x="16" y="338" width="180" height="46" rx="2"/>
+          <text class="d-t"  x="28" y="360">Fireflies · Granola</text>
+          <text class="d-t2" x="28" y="375">transcrições de reunião</text>
+
+          <line class="d-ln" x1="196" y1="71"  x2="240" y2="180" marker-end="url(#ar1)"/>
+          <line class="d-ln" x1="196" y1="129" x2="240" y2="194" marker-end="url(#ar1)"/>
+          <line class="d-ln" x1="196" y1="187" x2="240" y2="208" marker-end="url(#ar1)"/>
+          <line class="d-ln" x1="196" y1="245" x2="240" y2="222" marker-end="url(#ar1)"/>
+          <line class="d-ln" x1="196" y1="303" x2="240" y2="236" marker-end="url(#ar1)"/>
+          <line class="d-ln" x1="196" y1="361" x2="240" y2="250" marker-end="url(#ar1)"/>
+
+          <rect class="d-box-v" x="244" y="164" width="150" height="102" rx="2"/>
+          <text class="d-t"  x="256" y="196">Route 53 + ALB</text>
+          <text class="d-t2" x="256" y="212">HTTPS · TLS</text>
+          <text class="d-t2" x="256" y="228">host resolve o tenant</text>
+          <text class="d-t2" x="256" y="244">*.api.revertai.com.br</text>
+
+          <line class="d-ln" x1="394" y1="196" x2="440" y2="86"  marker-end="url(#ar1)"/>
+          <text class="d-lbl" x="400" y="130">:8000</text>
+          <line class="d-ln" x1="394" y1="238" x2="440" y2="406" marker-end="url(#ar1)"/>
+          <text class="d-lbl" x="398" y="330">:8080</text>
+
+          <rect class="d-group" x="440" y="24" width="274" height="512" rx="2"/>
+          <text class="d-hdr" x="440" y="16">ECS FARGATE · CLUSTER NIX</text>
+
+          <rect class="d-box" x="452" y="56" width="250" height="58" rx="2"/>
+          <text class="d-t"  x="464" y="78">svc web · nix_webserver</text>
+          <text class="d-t2" x="464" y="93">gunicorn 4 workers × 4 threads</text>
+          <text class="d-t2" x="464" y="107">WhiteNoise · timeout 300s</text>
+
+          <rect class="d-box" x="452" y="130" width="250" height="52" rx="2"/>
+          <text class="d-t"  x="464" y="152">worker-high · -Q high</text>
+          <text class="d-t2" x="464" y="167">prefork · SLA 60s · fila padrão</text>
+
+          <rect class="d-box" x="452" y="194" width="250" height="52" rx="2"/>
+          <text class="d-t"  x="464" y="216">worker-low · -Q low</text>
+          <text class="d-t2" x="464" y="231">cargas longas · SLA 600s</text>
+
+          <rect class="d-box" x="452" y="258" width="250" height="52" rx="2"/>
+          <text class="d-t"  x="464" y="280">worker-agent · -Q agent</text>
+          <text class="d-t2" x="464" y="295">trabalho de LLM · SLA 30s</text>
+
+          <rect class="d-box" x="452" y="322" width="250" height="52" rx="2"/>
+          <text class="d-t"  x="464" y="344">celery beat</text>
+          <text class="d-t2" x="464" y="359">DatabaseScheduler · singleton</text>
+
+          <rect class="d-box" x="452" y="386" width="250" height="52" rx="2"/>
+          <text class="d-t"  x="464" y="408">evolution-api v2.3.7</text>
+          <text class="d-t2" x="464" y="423">gateway WhatsApp (imagem 3ª parte)</text>
+
+          <rect class="d-box-q" x="452" y="450" width="250" height="52" rx="2"/>
+          <text class="d-t"  x="464" y="472">task one-shot: migrations</text>
+          <text class="d-t2" x="464" y="487">migrate · migrate_schemas --shared</text>
+
+          <rect class="d-group" x="752" y="24" width="392" height="512" rx="2"/>
+          <text class="d-hdr" x="752" y="16">PLANO DE DADOS &amp; SERVIÇOS AWS</text>
+
+          <rect class="d-box" x="764" y="56" width="368" height="56" rx="2"/>
+          <text class="d-t"  x="776" y="78">RDS PostgreSQL 17 + pgvector</text>
+          <text class="d-t2" x="776" y="94">um schema por tenant · POLICY de RLS</text>
+
+          <rect class="d-box" x="764" y="128" width="368" height="56" rx="2"/>
+          <text class="d-t"  x="776" y="150">ElastiCache Redis 7</text>
+          <text class="d-t2" x="776" y="166">db0 broker Celery · db2 throttle · locks de dedup</text>
+
+          <rect class="d-box" x="764" y="200" width="368" height="48" rx="2"/>
+          <text class="d-t"  x="776" y="222">S3</text>
+          <text class="d-t2" x="776" y="238">uploads, payloads brutos, arquivos gerados</text>
+
+          <rect class="d-box" x="764" y="264" width="368" height="48" rx="2"/>
+          <text class="d-t"  x="776" y="286">Secrets Manager</text>
+          <text class="d-t2" x="776" y="302">NIX_SECRET → secrets[] da task definition</text>
+
+          <rect class="d-box" x="764" y="328" width="368" height="48" rx="2"/>
+          <text class="d-t"  x="776" y="350">ECR</text>
+          <text class="d-t2" x="776" y="366">imagem única, build-once, promovida por tag</text>
+
+          <rect class="d-box" x="764" y="392" width="368" height="48" rx="2"/>
+          <text class="d-t"  x="776" y="414">CloudWatch Logs</text>
+          <text class="d-t2" x="776" y="430">/ecs/&lt;env&gt;/&lt;serviço&gt;</text>
+
+          <rect class="d-box" x="764" y="456" width="368" height="48" rx="2"/>
+          <text class="d-t"  x="776" y="478">Sentry · New Relic</text>
+          <text class="d-t2" x="776" y="494">erros + APM (workers só em prod)</text>
+
+          <line class="d-ln"   x1="714" y1="84"  x2="762" y2="84"  marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="78">psycopg2 · nix_app</text>
+          <line class="d-ln"   x1="714" y1="156" x2="762" y2="156" marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="150">publica · consome</text>
+          <line class="d-ln"   x1="714" y1="224" x2="762" y2="224" marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="218">boto3</text>
+          <line class="d-ln-d" x1="762" y1="288" x2="714" y2="288" marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="282">injeta env</text>
+          <line class="d-ln-d" x1="762" y1="352" x2="714" y2="352" marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="346">pull da imagem</text>
+          <line class="d-ln-d" x1="714" y1="416" x2="762" y2="416" marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="410">awslogs</text>
+          <line class="d-ln-d" x1="714" y1="480" x2="762" y2="480" marker-end="url(#ar1)"/>
+          <text class="d-lbl"  x="716" y="474">SDK</text>
+        </svg>
+      </div>
+      <figcaption><b>Uma imagem, cinco processos.</b> O que separa <span class="m">web</span>, <span class="m">worker-high</span>, <span class="m">worker-low</span>, <span class="m">worker-agent</span> e <span class="m">beat</span> é só o <span class="m">command</span> da task definition — mesmo código, mesmas migrations, mesmo <span class="m">NIX_SECRET</span>. O <span class="m">evolution-api</span> é a exceção: imagem de terceiro, perfil de segredos próprio, e só é redeployado quando o JSON dele muda. As migrations rodam como task one-shot com a task definition do web, e o rollout só começa depois que ela para.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 02 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§02</span><h2>O caminho de uma requisição</h2></div>
+
+    <p class="prose">A ordem do middleware é carga estrutural, não detalhe. O tenant é resolvido <em>antes</em> de qualquer outra coisa, porque todo middleware seguinte precisa rodar com o schema certo já ativo; e o contexto de RLS é definido pela autenticação, de modo que a política do banco já esteja armada quando o ORM emitir a primeira query.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1000 620" role="img" aria-label="Caminho de uma requisição: PublicDomainMiddleware resolve o tenant, AgentAuthMiddleware pode sobrepô-lo, segurança e Axes, autenticação JWT define os GUCs de persona, RLSContextMiddleware, então ViewSet, Serializer, Service, Model e finalmente PostgreSQL onde as POLICY são aplicadas.">
+          <defs>
+            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <text class="d-hdr" x="180" y="24">REQUISIÇÃO HTTPS</text>
+          <line class="d-ln" x1="380" y1="20" x2="380" y2="40" marker-end="url(#ar2)"/>
+
+          <rect class="d-box-v" x="180" y="40" width="400" height="46" rx="2"/>
+          <text class="d-t"  x="194" y="62">PublicDomainMiddleware</text>
+          <text class="d-t2" x="194" y="77">resolve tenant pelo domínio → connection.set_schema</text>
+          <text class="d-lbl" x="600" y="62">primeiro da pilha, sempre</text>
+          <text class="d-lbl" x="600" y="77">contexto de tenant é ambiente</text>
+
+          <line class="d-ln" x1="380" y1="86" x2="380" y2="106" marker-end="url(#ar2)"/>
+          <rect class="d-box-v" x="180" y="106" width="400" height="46" rx="2"/>
+          <text class="d-t"  x="194" y="128">AgentAuthMiddleware (agents_auth)</text>
+          <text class="d-t2" x="194" y="143">X-Agent-Id opaco → tenant + Bearer JWT injetado</text>
+          <text class="d-lbl" x="600" y="128">sobrepõe o tenant do Host</text>
+          <text class="d-lbl" x="600" y="143">fronteira de segurança do tráfego de agente</text>
+
+          <line class="d-ln" x1="380" y1="152" x2="380" y2="172" marker-end="url(#ar2)"/>
+          <rect class="d-box" x="180" y="172" width="400" height="46" rx="2"/>
+          <text class="d-t"  x="194" y="194">Security · WhiteNoise · Sessions · CORS · CSRF</text>
+          <text class="d-t2" x="194" y="209">HSTS, nosniff, X-Frame DENY, origens por regex</text>
+
+          <line class="d-ln" x1="380" y1="218" x2="380" y2="238" marker-end="url(#ar2)"/>
+          <rect class="d-box" x="180" y="238" width="400" height="46" rx="2"/>
+          <text class="d-t"  x="194" y="260">AxesMiddleware · django-axes</text>
+          <text class="d-t2" x="194" y="275">10 falhas por IP → cooloff de 30 min</text>
+
+          <line class="d-ln" x1="380" y1="284" x2="380" y2="304" marker-end="url(#ar2)"/>
+          <rect class="d-box-c" x="180" y="304" width="400" height="52" rx="2"/>
+          <text class="d-t"  x="194" y="326">RLSImpersonationJWTAuthentication (DRF)</text>
+          <text class="d-t2" x="194" y="341">valida o JWT e grava os GUCs de sessão: persona + tipo</text>
+          <text class="d-lbl-c" x="600" y="326">único código ciente de RLS</text>
+          <text class="d-lbl-c" x="600" y="341">fora do app rls/</text>
+
+          <line class="d-ln" x1="380" y1="356" x2="380" y2="376" marker-end="url(#ar2)"/>
+          <rect class="d-box" x="180" y="376" width="400" height="46" rx="2"/>
+          <text class="d-t"  x="194" y="398">django_rls RLSContextMiddleware</text>
+          <text class="d-t2" x="194" y="413">propaga o contexto para a conexão</text>
+
+          <line class="d-ln" x1="380" y1="422" x2="380" y2="442" marker-end="url(#ar2)"/>
+          <rect class="d-box" x="180" y="442" width="400" height="76" rx="2"/>
+          <text class="d-t"  x="194" y="464">ViewSet → Serializer → Service → Model</text>
+          <text class="d-t2" x="194" y="481">arquitetura cebola: dependências apontam para dentro</text>
+          <text class="d-t2" x="194" y="496">regra de negócio só em classes de service/</text>
+          <text class="d-t2" x="194" y="511">DjangoModelPermissions · throttle anon 60/min, user 1000/min</text>
+          <text class="d-lbl" x="600" y="470">camada interna nunca</text>
+          <text class="d-lbl" x="600" y="485">importa a externa</text>
+
+          <line class="d-ln" x1="380" y1="518" x2="380" y2="538" marker-end="url(#ar2)"/>
+          <rect class="d-box-c" x="180" y="538" width="400" height="52" rx="2"/>
+          <text class="d-t"  x="194" y="560">PostgreSQL — POLICY por tabela</text>
+          <text class="d-t2" x="194" y="575">o isolamento é executado aqui, não no queryset</text>
+          <text class="d-lbl-c" x="600" y="560">role nix_app: sem bypassrls</text>
+        </svg>
+      </div>
+      <figcaption><b>O isolamento não mora no código de feature.</b> Nenhum ViewSet filtra por consultor. A autenticação grava quem é o persona na sessão do banco, e a <span class="m">POLICY</span> do PostgreSQL decide quais linhas existem. É por isso que ler PII via <span class="m">.values_list()</span> ou <span class="m">.annotate()</span> é proibido: esses caminhos pulam o <span class="m">from_db</span> do modelo, que é onde o mascaramento acontece.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 03 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§03</span><h2>Multi-tenancy e Row-Level Security</h2></div>
+
+    <p class="prose">Existem <strong>duas forças de isolamento diferentes</strong> convivendo no mesmo banco, e a distinção decide como qualquer query deve ser escrita. Multi-Family Offices ganham schema próprio via <span class="m">django-tenants</span> — isolamento duro, e um acesso cruzado tende a falhar de forma barulhenta. Consultores, ao contrário, moram <em>todos juntos</em> no tenant compartilhado <span class="m">revertai</span>: ali não existe separação por schema, e a única fronteira entre um consultor e outro é a RLS.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1060 540" role="img" aria-label="Uma instância PostgreSQL contém o schema public com os SHARED_APPS e schemas por tenant. MFOs têm schema próprio com isolamento duro; o tenant revertai abriga todos os consultores, separados apenas por políticas de RLS. Dois roles de banco: nix_app sem bypassrls para runtime e nix_bot dono com bypassrls só para migrations.">
+          <rect class="d-box" x="20" y="24" width="1020" height="42" rx="2"/>
+          <text class="d-t" x="34" y="50">PostgreSQL 17 · instância única (RDS) · extensão pgvector</text>
+
+          <rect class="d-box-v" x="20" y="92" width="300" height="238" rx="2"/>
+          <text class="d-hdr" x="34" y="118">SCHEMA PUBLIC · SHARED_APPS</text>
+          <text class="d-t2" x="34" y="142">Existe uma única vez. Catálogos e infra</text>
+          <text class="d-t2" x="34" y="158">compartilhados por todos os tenants.</text>
+          <text class="d-t"  x="34" y="186">tenants · rls · core · common</text>
+          <text class="d-t"  x="34" y="206">assets · financial_data · brokers</text>
+          <text class="d-t"  x="34" y="226">translations · pricing · holidays</text>
+          <text class="d-t"  x="34" y="246">connectors · third_party_engines</text>
+          <text class="d-t"  x="34" y="266">async_tasks · agents_auth · identity</text>
+          <text class="d-lbl-c" x="34" y="298">um modelo SHARED não pode ter FK</text>
+          <text class="d-lbl-c" x="34" y="312">para um modelo TENANT</text>
+
+          <rect class="d-group" x="352" y="92" width="688" height="238" rx="2"/>
+          <text class="d-hdr" x="366" y="118">SCHEMAS POR TENANT · TENANT_APPS</text>
+
+          <rect class="d-box" x="368" y="136" width="150" height="86" rx="2"/>
+          <text class="d-t"  x="380" y="160">mfo_a</text>
+          <text class="d-t2" x="380" y="176">schema próprio</text>
+          <text class="d-t2" x="380" y="192">isolamento duro</text>
+          <text class="d-t2" x="380" y="208">falha barulhenta</text>
+
+          <rect class="d-box" x="530" y="136" width="150" height="86" rx="2"/>
+          <text class="d-t"  x="542" y="160">mfo_b</text>
+          <text class="d-t2" x="542" y="176">schema próprio</text>
+          <text class="d-t2" x="542" y="192">isolamento duro</text>
+          <text class="d-t2" x="542" y="208">falha barulhenta</text>
+
+          <rect class="d-box-c" x="700" y="130" width="324" height="180" rx="2"/>
+          <text class="d-t"  x="714" y="154">revertai — um único schema</text>
+          <text class="d-lbl-c" x="714" y="170">RLS é a ÚNICA fronteira aqui dentro</text>
+
+          <rect class="d-box" x="716" y="184" width="140" height="60" rx="2"/>
+          <text class="d-t"  x="728" y="206">consultor A</text>
+          <text class="d-t2" x="728" y="222">clientes, carteiras</text>
+
+          <rect class="d-box" x="868" y="184" width="140" height="60" rx="2"/>
+          <text class="d-t"  x="880" y="206">consultor B</text>
+          <text class="d-t2" x="880" y="222">clientes, carteiras</text>
+
+          <line class="d-ln-c" x1="862" y1="180" x2="862" y2="252"/>
+          <text class="d-lbl-c" x="714" y="272">POLICY do django-rls, criada em migrate_schemas:</text>
+          <text class="d-lbl-c" x="714" y="288">calculators → orchestrators → linkages</text>
+
+          <rect class="d-box" x="20" y="360" width="500" height="66" rx="2"/>
+          <text class="d-t"  x="34" y="384">role nix_app — runtime do webserver e dos workers</text>
+          <text class="d-t2" x="34" y="400">sem bypassrls · não é dono de nenhuma tabela</text>
+          <text class="d-t2" x="34" y="416">toda query da aplicação passa pelas políticas</text>
+
+          <rect class="d-box" x="540" y="360" width="500" height="66" rx="2"/>
+          <text class="d-t"  x="554" y="384">role nix_bot — exclusivo de migrations</text>
+          <text class="d-t2" x="554" y="400">owner · bypassrls = TRUE</text>
+          <text class="d-t2" x="554" y="416">selecionado em settings.py só em comandos de schema</text>
+
+          <rect class="d-box-c" x="20" y="452" width="1020" height="60" rx="2"/>
+          <text class="d-t"   x="34" y="476">Proteger uma nova tabela = registrá-la em rls/services/related_rls/registry.py</text>
+          <text class="d-lbl-c" x="34" y="496">A AUSÊNCIA do registro é o bug — e ele vaza em silêncio, sem exceção, sem teste vermelho.</text>
+        </svg>
+      </div>
+      <figcaption><b>O maior raio de dano do sistema.</b> Um vazamento de RLS no <span class="m">revertai</span> é ilimitado (todo par de consultores) e irreversível — não dá para "des-revelar" o portfólio de um cliente a um concorrente. É uma questão de confidencialidade e LGPD, não de correção numérica. Por isso RLS não é um filtro de DRF: é <span class="m">POLICY</span> no banco, criada em tempo de migration, e nenhum app de feature contém código de RLS.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 04 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§04</span><h2>O caminho do dinheiro</h2></div>
+
+    <p class="prose">O pipeline financeiro tem uma inversão que precisa estar clara antes de qualquer alteração: <strong>hoje a Nix não calcula posições</strong>. Ela empurra os trades para a Comdinheiro e puxa de volta as posições calculadas. A conciliação envolve esse ida-e-volta para garantir que o lado Nix e o lado do custodiante concordem antes de os números seguirem adiante.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1160 470" role="img" aria-label="Pipeline em oito estágios: ingestão de custodiantes, MovementInserter, conciliação, registro de trades enviado à Comdinheiro, importação das posições calculadas de volta, preenchimento de buracos, enriquecimento com PnL e retornos, agregação e relatórios, e por fim billing.">
+          <defs>
+            <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9" />
+            </marker>
+            <marker id="ar3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head-a" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <rect class="d-box-a" x="498" y="40" width="300" height="62" rx="2"/>
+          <text class="d-t"     x="512" y="64">Comdinheiro — terceiro</text>
+          <text class="d-lbl-a" x="512" y="80">calcula posições, preços unitários e P&amp;L</text>
+          <text class="d-lbl-a" x="512" y="94">é a calculadora viva, não um detalhe de integração</text>
+
+          <line class="d-ln-a" x1="493" y1="206" x2="540" y2="104" marker-end="url(#ar3a)"/>
+          <text class="d-lbl-a" x="386" y="150">envia nossos trades</text>
+          <line class="d-ln-a" x1="740" y1="104" x2="640" y2="206" marker-end="url(#ar3a)"/>
+          <text class="d-lbl-a" x="754" y="150">puxa posições calculadas</text>
+
+          <rect class="d-box" x="20" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="30" y="224">1</text>
+          <text class="d-t"   x="30" y="246">Ingestão</text>
+          <text class="d-t2"  x="30" y="261">third_party_engines</text>
+          <text class="d-t2"  x="30" y="275">API · webhook · PDF</text>
+
+          <rect class="d-box" x="157" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="167" y="224">2</text>
+          <text class="d-t"   x="167" y="246">MovementInserter</text>
+          <text class="d-t2"  x="167" y="261">intenção Nix</text>
+          <text class="d-t2"  x="167" y="275">trade ou evento</text>
+
+          <rect class="d-box-c" x="294" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="304" y="224">3</text>
+          <text class="d-t"   x="304" y="246">Conciliação</text>
+          <text class="d-t2"  x="304" y="261">Nix × custodiante</text>
+          <text class="d-lbl-c" x="304" y="275">deve falhar alto</text>
+
+          <rect class="d-box" x="431" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="441" y="224">4</text>
+          <text class="d-t"   x="441" y="246">Trade registration</text>
+          <text class="d-t2"  x="441" y="261">BookingService</text>
+          <text class="d-t2"  x="441" y="275">upload de operações</text>
+
+          <rect class="d-box" x="568" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="578" y="224">5</text>
+          <text class="d-t"   x="578" y="246">Positions importer</text>
+          <text class="d-t2"  x="578" y="261">clean → save → fill</text>
+          <text class="d-t2"  x="578" y="275">uma transação atômica</text>
+
+          <rect class="d-box" x="705" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="715" y="224">6</text>
+          <text class="d-t"   x="715" y="246">HoleFiller</text>
+          <text class="d-t2"  x="715" y="261">série sem buracos</text>
+          <text class="d-t2"  x="715" y="275">carrega D-1 adiante</text>
+
+          <rect class="d-box" x="842" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="852" y="224">7</text>
+          <text class="d-t"   x="852" y="246">EnrichPositions</text>
+          <text class="d-t2"  x="852" y="261">WindowPnl</text>
+          <text class="d-t2"  x="852" y="275">DailyReturns</text>
+
+          <rect class="d-box" x="979" y="206" width="125" height="76" rx="2"/>
+          <text class="d-num" x="989" y="224">8</text>
+          <text class="d-t"   x="989" y="246">Agregação</text>
+          <text class="d-t2"  x="989" y="261">aggregation_rule</text>
+          <text class="d-t2"  x="989" y="275">→ reports</text>
+
+          <line class="d-ln" x1="145" y1="244" x2="155" y2="244" marker-end="url(#ar3)"/>
+          <line class="d-ln" x1="282" y1="244" x2="292" y2="244" marker-end="url(#ar3)"/>
+          <line class="d-ln" x1="419" y1="244" x2="429" y2="244" marker-end="url(#ar3)"/>
+          <line class="d-ln" x1="556" y1="244" x2="566" y2="244" marker-end="url(#ar3)"/>
+          <line class="d-ln" x1="693" y1="244" x2="703" y2="244" marker-end="url(#ar3)"/>
+          <line class="d-ln" x1="830" y1="244" x2="840" y2="244" marker-end="url(#ar3)"/>
+          <line class="d-ln" x1="967" y1="244" x2="977" y2="244" marker-end="url(#ar3)"/>
+
+          <line class="d-ln" x1="1041" y1="282" x2="1041" y2="330" marker-end="url(#ar3)"/>
+          <rect class="d-box" x="979" y="330" width="125" height="66" rx="2"/>
+          <text class="d-t"  x="989" y="354">billing</text>
+          <text class="d-t2" x="989" y="369">série de NAV</text>
+          <text class="d-t2" x="989" y="383">→ Invoice</text>
+
+          <rect class="d-box-v" x="20" y="330" width="560" height="66" rx="2"/>
+          <text class="d-t"   x="34" y="354">Orquestração: ImportPositionsCommand (engine_integration) conduz os estágios 4–7</text>
+          <text class="d-t2"  x="34" y="370">quotizate → import → conciliação agendada → enrich → populate_pu_date → checks</text>
+          <text class="d-t2"  x="34" y="386">tudo assíncrono, por tenant, disparado por eventos (save do inserter faz debounce do booking)</text>
+
+          <text class="d-lbl-c" x="20" y="428">Falha silenciosa dominante: identificador de ativo não resolvido não levanta exceção — vira asset_id nulo, reaparece</text>
+          <text class="d-lbl-c" x="20" y="444">como posição faltante no relatório do cliente. Resolva identificadores sempre pelo TranslationService.</text>
+        </svg>
+      </div>
+      <figcaption><b>O modo de falha aqui é o número errado em silêncio.</b> Uma escala, moeda ou marcação errada no estágio 4, 5 ou 7 flui até NAV → billing → relatório sem levantar nenhuma exceção. É por isso que <span class="m">Decimal</span> (nunca <span class="m">float</span>) é obrigatório em valores monetários, e por que enfraquecer uma checagem de conciliação — afrouxar tolerância, engolir divergência — é tratado como remoção do alarme, não como ajuste.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 05 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§05</span><h2>Processamento assíncrono</h2></div>
+
+    <p class="prose">Uma fatia enorme do processamento roda em Celery, e o app <span class="m">async_tasks</span> não é "a fila": é <strong>controle de admissão</strong>. Antes de qualquer mensagem chegar ao broker, um <em>queue manager</em> decide se aquele trabalho já está em andamento, se está bloqueado por falhas repetidas, e em qual fila ele cabe.</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1080 310" role="img" aria-label="Fluxo de admissão de tasks: o chamador gera uma chave de deduplicação, verifica bloqueio de DLQ, avalia should_enqueue, adquire lock Redis SET NX e só então publica na fila. Cada checagem tem sua saída de rejeição.">
+          <defs>
+            <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <text class="d-lbl-c" x="20" y="26">Toda interação com o Redis é fail-open: se o Redis cair, a task é enfileirada mesmo assim (possivelmente duplicada) em vez de sumir.</text>
+
+          <rect class="d-box" x="20" y="60" width="150" height="58" rx="2"/>
+          <text class="d-t"  x="32" y="84">chamador</text>
+          <text class="d-t2" x="32" y="100">ViewSet (@async_task)</text>
+          <text class="d-t2" x="32" y="114">ou schedule_task</text>
+
+          <rect class="d-box" x="200" y="60" width="150" height="58" rx="2"/>
+          <text class="d-t"  x="212" y="84">dedup key</text>
+          <text class="d-t2" x="212" y="100">wallet:{id}:{data}</text>
+          <text class="d-t2" x="212" y="114">escopo por tenant</text>
+
+          <rect class="d-box-q" x="380" y="60" width="150" height="58" rx="2"/>
+          <text class="d-t"  x="392" y="84">bloqueado na DLQ?</text>
+          <text class="d-t2" x="392" y="100">set dlq:blocked</text>
+          <text class="d-t2" x="392" y="114">+ linha DLQEntry</text>
+
+          <rect class="d-box-q" x="560" y="60" width="150" height="58" rx="2"/>
+          <text class="d-t"  x="572" y="84">should_enqueue?</text>
+          <text class="d-t2" x="572" y="100">cobertura de domínio</text>
+          <text class="d-t2" x="572" y="114">período já contido</text>
+
+          <rect class="d-box-q" x="740" y="60" width="150" height="58" rx="2"/>
+          <text class="d-t"  x="752" y="84">SET NX EX</text>
+          <text class="d-t2" x="752" y="100">lock no Redis</text>
+          <text class="d-t2" x="752" y="114">TTL por manager</text>
+
+          <rect class="d-box-v" x="920" y="60" width="140" height="58" rx="2"/>
+          <text class="d-t"  x="932" y="84">publica</text>
+          <text class="d-t2" x="932" y="100">high · low · agent</text>
+          <text class="d-t2" x="932" y="114">HTTP 202</text>
+
+          <line class="d-ln" x1="170" y1="89" x2="198" y2="89" marker-end="url(#ar4)"/>
+          <line class="d-ln" x1="350" y1="89" x2="378" y2="89" marker-end="url(#ar4)"/>
+          <line class="d-ln" x1="530" y1="89" x2="558" y2="89" marker-end="url(#ar4)"/>
+          <line class="d-ln" x1="710" y1="89" x2="738" y2="89" marker-end="url(#ar4)"/>
+          <line class="d-ln" x1="890" y1="89" x2="918" y2="89" marker-end="url(#ar4)"/>
+
+          <line class="d-ln" x1="455" y1="118" x2="455" y2="196" marker-end="url(#ar4)"/>
+          <line class="d-ln" x1="635" y1="118" x2="635" y2="196" marker-end="url(#ar4)"/>
+          <line class="d-ln" x1="815" y1="118" x2="815" y2="196" marker-end="url(#ar4)"/>
+
+          <rect class="d-box-c" x="380" y="196" width="150" height="52" rx="2"/>
+          <text class="d-t"  x="392" y="218">HTTP 409</text>
+          <text class="d-t2" x="392" y="234">dlq_blocked</text>
+
+          <rect class="d-box-c" x="560" y="196" width="150" height="52" rx="2"/>
+          <text class="d-t"  x="572" y="218">suprimida</text>
+          <text class="d-t2" x="572" y="234">trabalho já coberto</text>
+
+          <rect class="d-box-c" x="740" y="196" width="150" height="52" rx="2"/>
+          <text class="d-t"  x="752" y="218">HTTP 409</text>
+          <text class="d-t2" x="752" y="234">already_running + task_id</text>
+
+          <text class="d-lbl" x="20" y="288">Um manager customiza só três coisas: o que conta como "o mesmo trabalho", quando é seguro enfileirar, e onde ele roda. O resto é herdado de BaseQueueManager.</text>
+        </svg>
+      </div>
+      <figcaption><b>Deduplicação é a razão de existir da camada.</b> Duas requisições que produzem a mesma chave são o mesmo trabalho; a segunda é descartada em vez de rodar uma cópia concorrente. O contrapeso é o modo de falha: uma colisão de chave <em>derruba silenciosamente</em> uma task legítima — a carteira nunca recalcula, o relatório nunca gera.</figcaption>
+    </figure>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Fila</th><th>SLA</th><th>Serviço</th><th>Concorrência dev / staging / prod</th><th>Carga típica</th></tr></thead>
+        <tbody>
+          <tr><td class="k">high</td><td class="n">60 s</td><td class="k">worker-high</td><td class="n">2 / 2 / 4</td><td>fila padrão: booking, importação de posições, conciliação, relatórios</td></tr>
+          <tr><td class="k">low</td><td class="n">600 s</td><td class="k">worker-low</td><td class="n">2 / 2 / 4</td><td>downloads longos de custodiante, backfills, ETL de séries</td></tr>
+          <tr><td class="k">agent</td><td class="n">30 s</td><td class="k">worker-agent</td><td class="n">1 / 1 / 2</td><td>despacho e resposta de agentes LLM, embeddings, extração</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><span class="m">celery beat</span> roda como singleton com o <span class="m">DatabaseScheduler</span>; tarefas periódicas se registram por decorador em <span class="m">async_tasks/tasks/periodic.py</span>, importado no carregamento do settings, e cada uma carrega um lock Redis com TTL de 80% do intervalo para não sobrepor execuções. Resultados vão para o banco via <span class="m">django-celery-results</span>, com <span class="m">acks_late</span>, <span class="m">prefetch=1</span> e teto global de 30 min por task.</p>
+  </section>
+
+  <!-- ============ 06 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§06</span><h2>Superfície agêntica e mensageria</h2></div>
+
+    <p class="prose">Boa parte do produto existe para que agentes de LLM operem o back-office. São dois subsistemas distintos: <strong>mensageria</strong> (a conversa entre o investidor e o agente, canal-agnóstica) e <strong>trabalho de agente</strong> (tarefas despachadas para agentes nomeados — Maia, Curator, Bushido, PACMAN, Concierge).</p>
+
+    <figure>
+      <div class="scroll">
+        <svg class="diagram" viewBox="0 0 1140 540" role="img" aria-label="Fluxo de mensageria: investidor no WhatsApp passa pelo Evolution, entra no app messaging que grava Message e agrupa por correlação, despacha ao agente OpenClaw; o callback do agente entra por agents_auth que converte header em JWT e tenant, passa por DRF com RLS, e a resposta sai pelo ReplyService com output guard. Abaixo, a esteira de trabalho de agente com MiddleTask, autorização de escopo, canais e PACMAN.">
+          <defs>
+            <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="d-head" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <text class="d-hdr" x="20" y="24">ENTRADA — DO INVESTIDOR AO AGENTE</text>
+
+          <rect class="d-box" x="20" y="40" width="160" height="58" rx="2"/>
+          <text class="d-t"  x="32" y="64">investidor</text>
+          <text class="d-t2" x="32" y="80">WhatsApp · e-mail</text>
+
+          <rect class="d-box" x="216" y="40" width="160" height="58" rx="2"/>
+          <text class="d-t"  x="228" y="64">Evolution / Mailgun</text>
+          <text class="d-t2" x="228" y="80">webhook sem tenant</text>
+
+          <rect class="d-box" x="412" y="40" width="200" height="58" rx="2"/>
+          <text class="d-t"  x="424" y="64">messaging · InboundEngine</text>
+          <text class="d-t2" x="424" y="80">resolve (tenant, persona) → Message</text>
+
+          <rect class="d-box" x="648" y="40" width="200" height="58" rx="2"/>
+          <text class="d-t"  x="660" y="64">Correlation + debounce</text>
+          <text class="d-t2" x="660" y="80">agrupa o turno, despacha uma vez</text>
+
+          <rect class="d-box-v" x="884" y="40" width="236" height="58" rx="2"/>
+          <text class="d-t"  x="896" y="64">OpenClaw — agente LLM</text>
+          <text class="d-t2" x="896" y="80">serviço externo · fila agent</text>
+
+          <line class="d-ln" x1="180" y1="69" x2="214" y2="69" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="376" y1="69" x2="410" y2="69" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="612" y1="69" x2="646" y2="69" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="848" y1="69" x2="882" y2="69" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="1002" y1="98" x2="1002" y2="150" marker-end="url(#ar5)"/>
+
+          <text class="d-hdr" x="20" y="140">VOLTA — DO AGENTE AO CLIENTE</text>
+
+          <rect class="d-box-c" x="884" y="150" width="236" height="58" rx="2"/>
+          <text class="d-t"  x="896" y="174">callback HTTP do agente</text>
+          <text class="d-lbl-c" x="896" y="190">header opaco X-Agent-Id</text>
+
+          <rect class="d-box-c" x="648" y="150" width="200" height="58" rx="2"/>
+          <text class="d-t"  x="660" y="174">agents_auth</text>
+          <text class="d-lbl-c" x="660" y="190">header → tenant + Bearer JWT</text>
+
+          <rect class="d-box" x="412" y="150" width="200" height="58" rx="2"/>
+          <text class="d-t"  x="424" y="174">DRF + RLS</text>
+          <text class="d-t2" x="424" y="190">persona impersonada no JWT</text>
+
+          <rect class="d-box-c" x="216" y="150" width="160" height="58" rx="2"/>
+          <text class="d-t"  x="228" y="174">ReplyService</text>
+          <text class="d-lbl-c" x="228" y="190">output_guard</text>
+
+          <rect class="d-box" x="20" y="150" width="160" height="58" rx="2"/>
+          <text class="d-t"  x="32" y="174">entrega ao cliente</text>
+          <text class="d-t2" x="32" y="190">ou takeover do operador</text>
+
+          <line class="d-ln" x1="882" y1="179" x2="848" y2="179" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="646" y1="179" x2="612" y2="179" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="410" y1="179" x2="376" y2="179" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="214" y1="179" x2="182" y2="179" marker-end="url(#ar5)"/>
+
+          <text class="d-lbl-c" x="20" y="234">O output_guard é a última linha antes de qualquer saída ao cliente: bloqueia bolhas de ferramenta, credenciais, JWTs e tracebacks.</text>
+
+          <rect class="d-group" x="20" y="268" width="1100" height="200" rx="2"/>
+          <text class="d-hdr" x="20" y="260">TRABALHO DE AGENTE — NIX_AGENT_INTERFACE</text>
+
+          <rect class="d-box" x="40" y="300" width="150" height="62" rx="2"/>
+          <text class="d-t"  x="52" y="324">PDF · evento</text>
+          <text class="d-t2" x="52" y="340">extrato de custodiante</text>
+          <text class="d-t2" x="52" y="354">ou broker_data_rejected</text>
+
+          <rect class="d-box" x="212" y="300" width="170" height="62" rx="2"/>
+          <text class="d-t"  x="224" y="324">MiddleTask</text>
+          <text class="d-t2" x="224" y="340">unidade de trabalho</text>
+          <text class="d-t2" x="224" y="354">dedup por status ativo</text>
+
+          <rect class="d-box-c" x="404" y="300" width="212" height="62" rx="2"/>
+          <text class="d-t"  x="416" y="324">ClientAuthorizationService</text>
+          <text class="d-lbl-c" x="416" y="340">escopo de persona permitido</text>
+          <text class="d-lbl-c" x="416" y="354">lista vazia = fail-closed</text>
+
+          <rect class="d-box" x="638" y="300" width="150" height="62" rx="2"/>
+          <text class="d-t"  x="650" y="324">canais</text>
+          <text class="d-t2" x="650" y="340">Discord · HTTP</text>
+          <text class="d-t2" x="650" y="354">todos os ativos</text>
+
+          <rect class="d-box" x="810" y="300" width="150" height="62" rx="2"/>
+          <text class="d-t"  x="822" y="324">PACMAN</text>
+          <text class="d-t2" x="822" y="340">extração por LLM</text>
+          <text class="d-t2" x="822" y="354">Maia · Curator · Bushido</text>
+
+          <rect class="d-box-a" x="982" y="300" width="118" height="62" rx="2"/>
+          <text class="d-t"  x="994" y="324">movements</text>
+          <text class="d-lbl-a" x="994" y="340">volta ao §04</text>
+
+          <line class="d-ln" x1="190" y1="331" x2="210" y2="331" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="382" y1="331" x2="402" y2="331" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="616" y1="331" x2="636" y2="331" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="788" y1="331" x2="808" y2="331" marker-end="url(#ar5)"/>
+          <line class="d-ln" x1="960" y1="331" x2="980" y2="331" marker-end="url(#ar5)"/>
+
+          <rect class="d-box-c" x="40" y="384" width="576" height="62" rx="2"/>
+          <text class="d-t"   x="52" y="408">screen de prompt injection</text>
+          <text class="d-lbl-c" x="52" y="424">roda três vezes: no ingest, no despacho e dentro do gate de autorização</text>
+          <text class="d-lbl-c" x="52" y="438">falha barulhenta — alerta no Slack, blacklist do chat, despacho bloqueado</text>
+
+          <rect class="d-box-v" x="638" y="384" width="462" height="62" rx="2"/>
+          <text class="d-t"  x="650" y="408">agent_memory — memória com escopo de persona</text>
+          <text class="d-t2" x="650" y="424">pgvector no RDS · embeddings OpenAI text-embedding-3-small, 768 dimensões</text>
+          <text class="d-t2" x="650" y="438">notas semânticas, resumos diários, inteligência de CRM por investidor</text>
+        </svg>
+      </div>
+      <figcaption><b>Duas fronteiras de confiança distintas.</b> O <span class="m">agents_auth</span> troca um header opaco por um JWT impersonado — quem erra o mapeamento coloca um agente dentro do schema de outro MFO. O <span class="m">ClientAuthorizationService</span> decide sobre <em>quais clientes</em> aquele agente pode falar; a extração do LLM é sempre tratada como não confiável e re-resolvida pelo ORM. Ambas falham em silêncio quando erram, produzindo uma resposta plausível e errada.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 07 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§07</span><h2>Mapa de apps</h2></div>
+
+    <p class="prose">Sessenta apps Django, divididos pela decisão que mais silenciosamente dá errado: <span class="m">SHARED_APPS</span> vive uma única vez no schema <span class="m">public</span>; <span class="m">TENANT_APPS</span> é replicado por schema. Um modelo SHARED não pode ter FK para um modelo TENANT — a falha aparece de forma aparentemente não relacionada.</p>
+
+    <div class="legend">
+      <i><span class="dot s-high"></span>sensibilidade alta — dinheiro, PII, RLS ou segurança</i>
+      <i><span class="dot s-med"></span>média</i>
+      <i><span class="dot s-low"></span>baixa</i>
+      <i><span class="dot s-none"></span>sem app_doc dedicado</i>
+    </div>
+
+    <div class="maplane">
+      <div class="lanehead"><span class="lanetag">shared · schema public</span><span class="lanenote">25 apps — catálogos, infraestrutura e fronteiras de entrada</span></div>
+      <div class="chipgrid">
+        <div class="chip"><span class="dot s-high"></span><div><b>rls</b><span>POLICY de Row-Level Security; o maior raio de dano do repositório</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>tenants</b><span>Tenant/Domain do django-tenants, branding, resolução cross-tenant</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>core</b><span>BaseModel/BaseModelNoHistory, auditoria via simple_history</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>async_tasks</b><span>infra Celery: dedup, DLQ, concorrência por tenant, health de fila</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>connectors</b><span>toda chamada de saída a terceiros, uma subpasta por provedor</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>third_party_engines</b><span>porta de entrada: API, webhook, arquivo, PDF lido por LLM</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>assets</b><span>catálogo canônico de instrumentos financeiros</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>financial_data</b><span>séries de preços e taxas — fonte de marcação</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>translations</b><span>Symbology: identificador externo → ativo Nix. Não reinventar</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>engine_integration</b><span>ponte com a Comdinheiro; dono do ImportPositionsCommand</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>pricing</b><span>motor local de precificação e curvas de yield indexado</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>agents_auth</b><span>header opaco → tenant + JWT; fronteira do tráfego de agente</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>file</b><span>ingestão genérica de arquivos, upload S3, carga reflexiva</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>file_generator</b><span>exportações XLSX/CSV somente leitura</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>marketing</b><span>única superfície de escrita não autenticada; ticket + rate limit + kill switch</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>cio</b><span>Proposta Revert: deck com link por CPF, portfólios padrão, suitability</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>common</b><span>helpers, infra DRF, feature flags, backend de banco ciente de RLS</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>brokers</b><span>registro de corretoras e custodiantes</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>holidays</b><span>calendário de negociação e aritmética de dias úteis</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>country</b><span>referência de país e moeda de caixa padrão</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>custom_fields</b><span>atributos chave/valor via GenericForeignKey</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>agent_outbound</b><span>registro de canais de saída por (tenant, agente)</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>messaging_config</b><span>ConnectorConfig e AgentResponseRule por agente</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>identity</b><span>entidades públicas independentes de schema (Party)</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>cleanup_legacy</b><span>app sem modelos que centraliza DROP TABLE de tabelas órfãs</span></div></div>
+        <div class="chip"><span class="dot s-low"></span><div><b>validators</b><span>JSONSchemaValidator e registro central de schemas</span></div></div>
+        <div class="chip"><span class="dot s-low"></span><div><b>pending_actions</b><span>painel somente leitura de pendências de qualidade de dado</span></div></div>
+      </div>
+    </div>
+
+    <div class="maplane">
+      <div class="lanehead"><span class="lanetag">tenant · um por schema</span><span class="lanenote">35 apps — domínio do cliente, pipeline financeiro e conversas</span></div>
+      <div class="chipgrid">
+        <div class="chip"><span class="dot s-high"></span><div><b>positions_movements</b><span>núcleo do caminho do dinheiro: feeds → movimentos → booking → posições</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>conciliator</b><span>portão de integridade Nix × custodiante; deve falhar alto</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>reports</b><span>gera, valida, versiona e envia o relatório do cliente</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>aggregation_rule</b><span>agrupa posições em carteiras e portfólios; alimenta reports e RLS</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>persona</b><span>clientes, prospects, funcionários, PII — tabela âncora da RLS</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>wallet</b><span>registro de contas em corretora; hub de FKs do domínio</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>authentication</b><span>login JWT, ciclo de senha, grupos; define os GUCs de persona</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>billing</b><span>taxas de gestão e performance a partir da série de NAV → Invoice</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>credentials</b><span>cofre criptografado (Fernet) de segredos de provedores</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>corporate_actions</b><span>dividendos, JCP, splits, spinoffs → movimentos</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>inflow_outflow</b><span>entradas e saídas de caixa por carteira e moeda</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>integration_history</b><span>rentabilidade histórica importada de fora</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>tenant_financial_data</b><span>séries diárias por tenant: NAV de carteira, preços do motor</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>messaging</b><span>roteador de conversas canal-agnóstico, takeover, guarda de saída</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>nix_agent_interface</b><span>ponte WhatsApp/agente, MiddleTask, gate de autorização</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>agent_memory</b><span>memória semântica do agente com escopo de persona (pgvector)</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>notification</b><span>evento de domínio → quem, qual canal, permitido; fan-out auditado</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>whatsapp_flow</b><span>Meta WhatsApp Flows ponta a ponta → dados cadastrais na Persona</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>meeting</b><span>transcrições (Fireflies/Granola) → agente concierge</span></div></div>
+        <div class="chip"><span class="dot s-high"></span><div><b>schedule</b><span>agenda do assessor, disponibilidade, Google Meet</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>alerts</b><span>comunicação de saída (e-mail/Teams/Slack) + trilha de auditoria</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>documents</b><span>metadados versionados de arquivos + join de UserAction</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>benchmark_config</b><span>qual série de benchmark se aplica a cada agregação</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>target_allocation</b><span>alocação-alvo por classe de risco + atribuição de performance</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>tenant_assets</b><span>camada editável por tenant sobre o catálogo compartilhado</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>ops_status</b><span>status operacional de conciliação por carteira/relatório/data</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>pending_data</b><span>fila de triagem humana antes de materializar Persona/Wallet</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>dash_pipeline</b><span>Kanban de vendas/CRM; onboarding por WhatsApp</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>tasks</b><span>itens de trabalho operacionais ligados a uma Persona</span></div></div>
+        <div class="chip"><span class="dot s-med"></span><div><b>correlation</b><span>grafo de correlation-id agrupando linhas de um processo</span></div></div>
+        <div class="chip"><span class="dot s-low"></span><div><b>account</b><span>metadados de conta bancária referenciados por carteiras</span></div></div>
+        <div class="chip"><span class="dot s-low"></span><div><b>event_log</b><span>log genérico de processo do subsistema de mensageria</span></div></div>
+        <div class="chip"><span class="dot s-none"></span><div><b>broadcast</b><span>disparo em massa (sem app_doc dedicado)</span></div></div>
+        <div class="chip"><span class="dot s-none"></span><div><b>research_feed</b><span>feed de research (sem app_doc dedicado)</span></div></div>
+        <div class="chip"><span class="dot s-none"></span><div><b>cio.portfolio_presentation</b><span>apresentação de proposta ao prospect</span></div></div>
+      </div>
+    </div>
+
+    <div class="callout v">
+      <b>Documentação como parte do código</b>
+      <p>Cada app tem um doc otimizado para LLM em <span class="m">_bmad-output/app_docs/&lt;app&gt;.md</span> com modelo de dados, serviços, endpoints, eventos, dependências cruzadas e raio de dano. Atualizá-lo no mesmo PR é obrigatório, e há um workflow (<span class="m">docs-freshness.yml</span>) que checa se ficou para trás. Fluxos que nenhum app sozinho possui vivem em <span class="m">workflows_docs/</span> — o pipeline de posições, cada calculadora financeira, a geração de relatórios e o mergulho em RLS.</p>
+    </div>
+  </section>
+
+  <!-- ============ 08 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§08</span><h2>Stack e integrações</h2></div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Camada</th><th>Tecnologias</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Runtime</td><td>Python 3.12 (imagem prod em 3.11-alpine) · Django 5.2.10 · Django REST Framework 3.15 · Gunicorn 21 · WhiteNoise</td></tr>
+          <tr><td class="k">Banco</td><td>PostgreSQL 17 · psycopg2 · pgvector 0.4.2 · django-tenants 3.8 · django-rls 0.4.1 · django-simple-history · django-auto-prefetch</td></tr>
+          <tr><td class="k">Assíncrono</td><td>Celery 5.3.4 · Redis 7 (broker + locks + throttle) · kombu · django-celery-results · django-celery-beat</td></tr>
+          <tr><td class="k">API</td><td>drf-spectacular (OpenAPI) · django-filter · DefaultRouter com 282 registros · LimitOffsetPagination (500)</td></tr>
+          <tr><td class="k">Segurança</td><td>djangorestframework-simplejwt · django-axes · django-fernet-encrypted-fields · throttles por escopo · CORS/CSRF por regex de subdomínio</td></tr>
+          <tr><td class="k">Financeiro e dados</td><td>pandas 2.2 · openpyxl · rapidfuzz · workalendar · yfinance · Decimal em todo valor monetário</td></tr>
+          <tr><td class="k">Documentos</td><td>WeasyPrint 62 + pydyf (HTML→PDF) · pdfplumber · pikepdf · python-magic</td></tr>
+          <tr><td class="k">IA</td><td>OpenAI (embeddings text-embedding-3-small, 768d) · Google GenAI / Gemini · OpenClaw (agente externo)</td></tr>
+          <tr><td class="k">Observabilidade</td><td>sentry-sdk (Django + Celery) · New Relic APM · CloudWatch Logs · django-zeal e django-querycount só em dev</td></tr>
+          <tr><td class="k">Infra</td><td>ECS Fargate · ALB · RDS · ElastiCache · S3 · Secrets Manager · ECR · Terraform + Terragrunt (us-east-1)</td></tr>
+          <tr><td class="k">Qualidade</td><td>black · isort · ruff (linha 120, py312) · pylint · mypy · bandit · pre-commit · radon/xenon · pip-audit</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Integrações externas</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Domínio</th><th>Parceiros</th><th>Modo</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Cálculo de posições</td><td>Comdinheiro</td><td>ida-e-volta: sobe trades por JWT API, baixa posições e séries; também recebe escrita de preços</td></tr>
+          <tr><td class="k">Custodiantes</td><td>XP (direct OAuth ou egress mTLS), BTG Digital, BTG PSF, Britech, Addepar, Bradesco, Santander, C6, Mercado Bitcoin</td><td>pull por API, webhook, upload de arquivo e PDF lido por LLM</td></tr>
+          <tr><td class="k">Mercado</td><td>yfinance</td><td>séries históricas de cotação</td></tr>
+          <tr><td class="k">Mensageria</td><td>Evolution API (WhatsApp), Meta WhatsApp Flows, Mailgun, Slack, Microsoft Teams, Discord</td><td>gateway próprio no cluster, webhooks e envio transacional</td></tr>
+          <tr><td class="k">Reuniões</td><td>Fireflies (webhook), Granola (polling), Google Meet/Calendar</td><td>transcrição → agente concierge → inteligência comercial</td></tr>
+          <tr><td class="k">Armazenamento</td><td>Amazon S3 via boto3</td><td>chaves sempre namespaceadas pelo tenant</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout a">
+      <b>Regra de acoplamento</b>
+      <p>Conector é transporte burro. Chamar um conector direto é considerado <em>code smell</em>: ele só deve ser invocado de dentro de uma classe de serviço que é dona de uma operação específica — importar posições passa por <span class="m">ComDinheiroPositionsImporter</span>, encapsulado por <span class="m">ImportPositionsCommand</span>; enviar e-mail passa por <span class="m">Communicator</span>, que também escreve o <span class="m">CommunicationLog</span>. Isso é o que torna o provedor substituível trocando uma classe, e não todos os pontos de chamada.</p>
+    </div>
+  </section>
+
+  <!-- ============ 09 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§09</span><h2>Segurança</h2></div>
+
+    <div class="cols">
+      <div>
+        <h3>Autenticação</h3>
+        <p>JWT via simplejwt com rotação e blacklist após rotação (access 72 h, refresh 1 dia em produção). A classe padrão de autenticação é a de impersonation, que grava o persona atuante nos GUCs de sessão. Backend por e-mail, com <span class="m">django-axes</span> na frente: 10 falhas por IP, cooloff de 30 minutos. Permissão padrão é <span class="m">DjangoModelPermissions</span>.</p>
+      </div>
+      <div>
+        <h3>Superfícies não autenticadas</h3>
+        <p>São poucas e todas contidas: o formulário de leads da landing (ticket de sessão de uso único + rate limit em Redis compartilhado + kill switch por env), o link do relatório ao cliente (autenticado por prefixo de CPF/CNPJ) e dois webhooks de custodiante — um com HMAC comparado por <span class="m">compare_digest</span>, outro protegido por URL não adivinhável mais allowlist de IP no nginx.</p>
+      </div>
+      <div>
+        <h3>Segredos e PII</h3>
+        <p>Segredos de provedor ficam em <span class="m">ExternalCredential</span>, criptografados com Fernet por tenant, lidos por <span class="m">get_secret_value</span>. Em produção, tudo vem do <span class="m">NIX_SECRET</span> no Secrets Manager, cujas chaves são listadas dinamicamente para montar o <span class="m">secrets[]</span> da task definition — o que elimina drift entre o repositório e a AWS.</p>
+      </div>
+      <div>
+        <h3>Entrada de agente</h3>
+        <p>Tráfego de agente entra por um header opaco convertido em JWT impersonado. O nome do header é sanitizado antes do uso (padrão + blacklist), credencial inválida falha com 401, e <span class="m">is_safe=False</span> é um kill switch pegajoso que bloqueia a saída até um operador reverter. Todo texto de entrada passa pelo screen de prompt injection.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§10</span><h2>Entrega</h2></div>
+
+    <p class="prose">GitHub Actions faz tudo — o <span class="m">.circleci/config.yml</span> ainda existe no repositório, mas está inteiramente comentado. O invariante central é <strong>build-once</strong>: a imagem é construída uma vez, taggeada com o SHA, e as promoções para staging e produção apenas re-taggeiam esse mesmo digest no ECR. Só um hotfix cujo commit não passou por staging dispara um build novo.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Workflow</th><th>Gatilho</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td class="k">ci_with_make</td><td>PR e push em main / release/*</td><td>sobe o stack em Docker Compose e roda a suíte; expõe <span class="m">ci-gate</span> como check obrigatório estável</td></tr>
+          <tr><td class="k">code-quality</td><td>PR</td><td>complexidade (radon/xenon), lint (pylint/ruff), segurança (bandit/pip-audit) — hoje apenas relatório</td></tr>
+          <tr><td class="k">branch-name-check</td><td>todo PR</td><td>exige <span class="m">task/rev-&lt;id&gt;</span> ou <span class="m">task/bug-&lt;id&gt;</span> referenciando uma issue real no Linear</td></tr>
+          <tr><td class="k">docs-freshness</td><td>PR</td><td>reprova app_docs desatualizado em relação ao código alterado</td></tr>
+          <tr><td class="k">pr-review-crew</td><td>opt-in por label ou comentário</td><td>revisão agêntica com Codex CLI; os agentes rodam sem token do GitHub e só o job final posta</td></tr>
+          <tr><td class="k">deploy-dev / staging</td><td>push em main / tag <span class="m">staging*</span></td><td>build ARM64 → ECR → renderiza as task definitions → migrations one-shot → rollout</td></tr>
+          <tr><td class="k">deploy-prod</td><td>tag <span class="m">vX.Y.Z</span></td><td>promove o digest existente, deploya com espera de estabilidade, e cria a branch <span class="m">release/vX.Y</span> de manutenção</td></tr>
+          <tr><td class="k">rollback-prod</td><td>manual</td><td>compartilha o grupo de concorrência com o deploy — nunca rodam em paralelo</td></tr>
+          <tr><td class="k">terragrunt-dev</td><td>mudança em infra/</td><td>RDS, ElastiCache, security groups e bucket S3 declarados em Terraform + Terragrunt</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="prose">O sizing é declarado inline por ambiente no workflow reutilizável: prod usa 2 vCPU/4 GB no web e nos workers <span class="m">high</span>/<span class="m">low</span>, 4 vCPU/8 GB no <span class="m">worker-agent</span>, e é o único ambiente que embrulha os workers em <span class="m">newrelic-admin</span>. O beat é deployado por último, sozinho, porque é singleton.</p>
+  </section>
+
+  <!-- ============ 11 ============ -->
+  <section>
+    <div class="shead"><span class="sref">§11</span><h2>Convenções que o código presume</h2></div>
+
+    <div class="cols">
+      <div>
+        <h3>Arquitetura</h3>
+        <p>OOP com cebola: ViewSet → Serializer → Service → Model, dependências sempre para dentro. Modelos herdam <span class="m">BaseModel</span>; endpoints são ViewSets registrados no router; regra de negócio só em classes dentro de <span class="m">service/</span>. Herança segue "filho magro, mãe gorda" — o comportamento sobe para a base.</p>
+      </div>
+      <div>
+        <h3>Integridade</h3>
+        <p><span class="m">Decimal</span> para dinheiro, nunca <span class="m">float</span>. FK com <span class="m">PROTECT</span> ou <span class="m">SET_NULL</span>, nunca <span class="m">CASCADE</span>. Enums como <span class="m">TextChoices</span>, um por arquivo. Migrations sempre geradas pelo Makefile. Transações curtas e só para múltiplas escritas.</p>
+      </div>
+      <div>
+        <h3>Testes</h3>
+        <p>Todo teste estende <span class="m">NoExternalTestCase</span>, que bloqueia conexão externa e cria um tenant de teste. Fábricas com <span class="m">factory_boy</span>. Um teste que não pode falhar por bug de regra de negócio é custo de manutenção, não cobertura.</p>
+      </div>
+      <div>
+        <h3>Fluxo de trabalho</h3>
+        <p>O repositório desenvolve pelo BMad Method: análise e planejamento opcionais, mas <em>solutioning</em> e implementação obrigatórios, com dois portões de padrões em volta da implementação. A única exceção é um hotfix crítico verificado. Fuso do projeto é BRT, não UTC.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Antes de mudar qualquer coisa</b>
+      <p>Raio de dano não é tamanho de diff. Três linhas num ponto central podem ser sistêmicas, enquanto uma feature isolada de 800 linhas é contida. A pergunta que precisa ter resposta é se a coisa quebra <em>alto</em> — com exceção visível — ou <em>baixo</em>: um número errado, sem rastro, num relatório que já foi enviado ao cliente.</p>
+    </div>
+  </section>
+
+  <footer>
+    Levantado diretamente do repositório <span class="m">Revert-AI/nix_webserver</span> (branch <span class="m">main</span>) — código, task definitions, workflows, Terragrunt e o conjunto de docs em <span class="m">_bmad-output/</span>. Números de escala contados no clone. Para o detalhe de cada app, o doc dedicado em <span class="m">_bmad-output/app_docs/</span> é a fonte corrente.
+  </footer>
+
+</div>
+
+</body>
+</html>
