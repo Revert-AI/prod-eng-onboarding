@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-08-07
+last_verified: 2026-08-17
 owner: TBD (repo maintainer — update to whoever owns onboarding)
 ---
 
@@ -9,7 +9,7 @@ Where to start if you're new to product construction at Revert AI. The onboardin
 
 ## Start here — the onboarding path
 
-Five conversations, in this order. **The order is the point.** The thesis explains why the product exists, the consultants' work explains who it's for, and the architecture only makes sense once you have both. Going straight to the code is the most common way to end up with a working mental model of the systems and no idea what they're for.
+Five conversations, in this order, then one document. **The order is the point.** The thesis explains why the product exists, the consultants' work explains who it's for, and the architecture only makes sense once you have both. Going straight to the code is the most common way to end up with a working mental model of the systems and no idea what they're for.
 
 1. **Revert's thesis** — what we're betting on, and why now.
    Ask **Rodrigo Terni**.
@@ -31,16 +31,23 @@ Five conversations, in this order. **The order is the point.** The thesis explai
    Ask **Guilherme Scagnolato**.
    Same [architecture overview](../architecture/README.md); ask the assistant about `concierge-agent-pi`.
 
-Steps 1–3 are *why* and *for whom*. Steps 4–5 are *how*. If you only have time for two conversations this week, make them 1 and 2.
+6. **How we build** — the path any piece of work takes, from initiative to shipped and measured.
+   Read [How We Work](../how-we-work/README.md), which points at the process doc in Notion.
+   No conversation needed to start; the doc is the artifact that replaces asking. Its owner is **Taka** if something in it doesn't hold up.
+
+Steps 1–3 are *why* and *for whom*. Steps 4–5 are *how the systems work*. Step 6 is *how the work works* — read it before you start your first real piece of work, not before your first conversation. It's last because process without context is just paperwork: the tracks, the appetites and the scope cuts only make sense once you know what the product is for. But don't skip it — starting something without it is how you end up writing a PRD after the code.
+
+If you only have time for two conversations this week, make them 1 and 2.
 
 ## Accounts & access
 
 Sort these in parallel with the conversations above — you'll need them by step 4.
 
 - **GitHub** — access to the `Revert-AI` organization. The repos you'll likely touch: `nix_webserver`, `portal_v2`, `concierge-agent-pi`, `revert-cloud-infra`, and `revert-knowledge-base` (see [Product & Architecture](../architecture/README.md)). Access is over SSH; confirm your key is on your GitHub account and authorized for the org.
-- **Internal chat / communication tool** — `Not yet documented`. Ask your onboarding contact.
+- **Notion** — where PRDs and Tech Specs live. You need access to `Home → Iniciativas` and `Home → Best practices`. See [How We Work](../how-we-work/README.md).
+- **Linear** (execution: initiatives, projects, issues) — you'll be on one of **Engineering**, **Produto**, **Customer XP** or **SRE & DevOps**. See [Projects](../projects/README.md).
+- **Internal chat / communication tool** — `Not yet documented`, but note that `#engineering-changes` is where cross-team changes are announced *before* being implemented, so make sure you're in it. Ask your onboarding contact.
 - **Email / SSO** — `Not yet documented`.
-- **Linear** (project tracking, team `REV`) — see [Projects](../projects/README.md).
 
 ## Tools
 
@@ -55,3 +62,4 @@ Sort these in parallel with the conversations above — you'll need them by step
 3. Ask your onboarding contact for the `Not yet documented` access items above.
 4. Ask this repo's AI assistant something real — "how does the wallet flow work in `portal_v2`", "who owns the infra repo" — to confirm your access works end to end.
 5. Read [Org & Teams](../org-and-teams/README.md) for who to ask about areas beyond the five above.
+6. Before your first real piece of work: read [How We Work](../how-we-work/README.md), then read a real PRD rather than starting from the template cold — `Middle com Escala` → `PRD — Middle Office em autopilot`, under Notion's `Iniciativas` tree, is the worked example.

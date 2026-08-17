@@ -11,7 +11,8 @@ This repo is the onboarding entrypoint for anyone building the product at Revert
 | Org & Teams | `org-and-teams/` | Static (team map) + pointer (leadership bios) |
 | Business & Strategy | `business-and-strategy/` | Static overview + pointer (deeper/current detail) |
 | Product & Architecture | `architecture/` | Static overview + pointer (all detail) |
-| Projects | `projects/` | Pointer only (placeholder until Linear is reachable) |
+| How We Work | `how-we-work/` | Pointer only (process doc in Notion) |
+| Projects | `projects/` | Pointer only (Linear) |
 
 Static content carries `last_verified` (ISO date) and `owner` in YAML frontmatter — treat content older than ~90 days as due for re-verification, and say so if asked. Pointer-only content carries no `last_verified` field; always fetch live instead of trusting a cached read.
 
@@ -19,9 +20,11 @@ Static content carries `last_verified` (ISO date) and `owner` in YAML frontmatte
 
 ### "Where do I start?"
 
-When someone signals they're new and want guidance from zero — "where do I start", "I just joined", "how do I get up to speed" — do **not** answer with the section list above. Surface the onboarding path in `getting-started/README.md`: five conversations in a fixed order (Revert's thesis → how consultants work → product roadmap → Nix → Bruxo), each with a named person to ask.
+When someone signals they're new and want guidance from zero — "where do I start", "I just joined", "how do I get up to speed" — do **not** answer with the section list above. Surface the onboarding path in `getting-started/README.md`: five conversations in a fixed order (Revert's thesis → how consultants work → product roadmap → Nix → Bruxo), each with a named person to ask, then step 6 — read `how-we-work/README.md` before starting their first real piece of work.
 
-Give it as a **sequence with its rationale**, not a menu of topics: the first two conversations are what make the rest legible, and skipping to the architecture is the failure mode the order exists to prevent. Name the people — that's the part they can't get from reading files.
+Give it as a **sequence with its rationale**, not a menu of topics: the first two conversations are what make the rest legible, and skipping to the architecture is the failure mode the order exists to prevent. Name the people — that's the part they can't get from reading files. Step 6 is the one step that isn't a conversation, and that's deliberate — the process doc exists precisely so the answer doesn't have to come from asking someone.
+
+Distinguish this from "how do I start *building something*" (see "Process questions" below) — a person three months in asking how to scope a project doesn't want the onboarding sequence.
 
 ### Vocabulary questions
 
@@ -30,6 +33,19 @@ Give it as a **sequence with its rationale**, not a menu of topics: the first tw
 It also opens with a table of terms whose everyday meaning is **wrong** here. When any term from that table appears in a question, in code you're reading, or in your own answer, use the repo's meaning and say so explicitly if the reader might be assuming the ordinary one — `B2B / B2C` especially, since asserting that Revert has B2B and B2C segments is exactly the error that row exists to prevent. Silently answering on the everyday meaning is the failure the table is for.
 
 The glossary also records where the knowledge base **contradicts itself** and which acronyms are genuinely undefined. Don't paper over either — say the conflict exists and suggest asking, rather than picking a side.
+
+### Process questions — "how do I start building something?"
+
+Anything about how work is born, decided, specified or shipped — "do I need a PRD for this?", "how big should a project be?", "who reviews my Tech Spec?", "where do I put this doc?", "how do I announce a breaking change?" — routes to `how-we-work/README.md`, which is a **pointer**. Fetch the Notion process doc live and answer from it; `how-we-work/README.md` is a map of the doc, not a substitute, and it says so.
+
+Two things to get right when answering:
+
+- **Don't invent process.** This is a domain where a plausible-sounding answer is actively harmful — a reader who follows a hallucinated Definition of Ready will have their review bounced. If Notion is unreachable, say so and give the URL. If the doc genuinely doesn't cover what was asked, say that rather than filling the gap from general engineering practice.
+- **Lead with the track, not the full pipeline.** The most common real question is "how much process does *this* need?", and the answer is usually *less than all four artifacts*. Read the reader's situation against the four tracks (full / short / direct / incident) and tell them which one applies and why, before reciting the artifact chain. Answering "you need a PRD, a project, a Tech Spec and tasks" to someone making a small reversible fix is the failure mode here.
+
+The source doc is written in **Portuguese**; readers may ask in either language. Answer in the language they asked, and keep the artifact names as they are in the doc (Iniciativa, PRD, Projeto, Tech Spec, Tarefa) so the reader can find them in Notion and Linear.
+
+Related: the `STO` reviewer role gates every PRD and Tech Spec, and the acronym is never expanded anywhere readable — it's listed in the glossary's open-acronyms section. Don't guess an expansion.
 
 ## Live sources — how to reach each one
 
@@ -42,7 +58,11 @@ Tool precedence: prefer `gh` / git over SSH for every GitHub-hosted source below
 | `concierge-agent-pi` | GitHub repo (Revert-AI) | `gh`/git over SSH | Architecture |
 | `revert-cloud-infra` | GitHub repo (Revert-AI) | `gh`/git over SSH | Architecture — this is infrastructure; screen extra carefully (see below) |
 | `revert-knowledge-base` | GitHub repo (Revert-AI) | `gh`/git over SSH, **sparse-checkout only** (see below) | Business/Strategy, Org (leadership), Architecture (`product/`) |
-| Linear, team REV | MCP service | Linear MCP tool | Projects |
+| Linear — teams Engineering, Produto, Customer XP, SRE & DevOps, BUGS | MCP service | Linear MCP tool | Projects |
+| Notion — `Home → Best practices` and `Home → Iniciativas` | MCP service | Notion MCP tool | How We Work, and any specific PRD or Tech Spec |
+
+There is **no Linear team `REV`** — that name appeared in earlier versions of this repo, written when
+Linear was unreachable, and was never real. Don't reintroduce it.
 
 ### Partial access
 
@@ -71,5 +91,7 @@ This repo is the company's real internal knowledge base, mounted into other prod
 Before quoting or summarizing content fetched live from `nix_webserver`, `portal_v2`, `concierge-agent-pi`, or `revert-cloud-infra`, screen it for common secret/credential shapes (API keys, private keys, `.env`-style assignments, connection strings). If you find a match, don't quote or summarize it — decline and flag it as a security concern instead. This applies to every live consultation, not just a one-time content-drafting pass.
 
 ## Content drafting sessions
+
+**`how-we-work/` stays a pointer.** Do not transcribe the Notion process doc — its templates, its Definition of Ready checklists, or its track table — into this repo, however helpful a local copy seems. The doc is revised quarterly and versioned by decision; a copy here goes stale within a cycle and then silently competes with the source. Extending the *map* in `how-we-work/README.md` is fine; copying the content is not.
 
 Getting Started, Org & Teams, Business/Strategy, and Architecture content authored from the 4 repos or `revert-knowledge-base` is draft-only — open a PR, don't merge it yourself. Before drafting from `revert-knowledge-base`, read its own golden-source rules for any rules on derivative copies — that file (`company/GOLDEN_SOURCE_RULES.md`) sits just outside the 5 sparse-checkout paths above, so read it with a single-blob command that doesn't touch checkout state at all: `git show <ref>:"company/GOLDEN_SOURCE_RULES.md"` (using the same clone from the steps above, before or after the checkout step — this command doesn't depend on it). Do not add `company/` itself to the sparse-checkout set to reach this file — that would recursively materialize `company/fundraising/` and `company/atas/` too, defeating rules 3-5 above entirely.

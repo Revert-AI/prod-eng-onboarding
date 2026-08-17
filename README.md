@@ -10,9 +10,9 @@ else working on product construction.
    architecture, the business model, or ongoing projects.
 
 The assistant reads [`AGENTS.md`](AGENTS.md) to know what's answered from this repo directly and
-what it needs to fetch live — from the four product repos, `revert-knowledge-base`, or Linear. You
-generally don't need to open `AGENTS.md` yourself; it's written for the assistant, not for you.
-Open it only if you're curious how the routing works or you're extending it.
+what it needs to fetch live — from the four product repos, `revert-knowledge-base`, Linear, or
+Notion. You generally don't need to open `AGENTS.md` yourself; it's written for the assistant, not
+for you. Open it only if you're curious how the routing works or you're extending it.
 
 ## New here? Start with Getting Started
 
@@ -30,7 +30,8 @@ there too.
 | [Org & Teams](org-and-teams/README.md) | Who to ask about what, and who commits where |
 | [Business & Strategy](business-and-strategy/README.md) | Strategy framing; points live to `revert-knowledge-base` for anything time-sensitive |
 | [Product & Architecture](architecture/README.md) | What the product does and how the systems fit together; points live to the four product repos |
-| [Projects](projects/README.md) | Pointer to Linear (team `REV`) for current work |
+| [How We Work](how-we-work/README.md) | How work is born, decided, specified and shipped; points live to the process doc in Notion |
+| [Projects](projects/README.md) | Pointer to Linear for current work |
 
 Most of these sections are a **thin static overview plus a live pointer**, not the full source of
 truth — that's deliberate. Static content carries a `last_verified` date in its frontmatter; treat
