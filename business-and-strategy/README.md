@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-08-06
+last_verified: 2026-08-13
 owner: TBD (repo maintainer — update to whoever owns this content)
 ---
 
@@ -24,6 +24,16 @@ Revert positions itself as the former. That bet is set against a market-wide shi
 Brazil: advisors and consultants moving away from commission-based, brokerage-affiliated models toward
 independent, fee-based practice, a transition the market data describes as further along in the US and
 essentially complete in Europe.
+
+**Current focus: tooling consultants to serve their *investidores* well, not consultant onboarding.**
+Revert's client is the **consultant** — that doesn't change. What's shifting near-term is where investment
+goes: into giving the consultant the tooling to deliver a world-class experience to their **investidor**
+(the consultant's own client, whose assets the consultant manages) — not into onboarding more consultants.
+The logic: a consultant who can offer their investidores that experience has outsized reason to migrate
+("tombar") their investidor base onto Revert. That, in turn, is the intended lever on both **consultant
+churn** (down) and **AUM** (up) — a consultant who has moved their investidores onto Revert has more reason
+to stay, and each migration grows the assets Revert operates on. Consultant-onboarding is explicitly
+deprioritized against this while it's the focus.
 
 This overview intentionally stops here. Revert's live strategy, moat thinking, market data, and go-to-market
 material change often and are owned by `revert-knowledge-base` — see below for how to reach it.
