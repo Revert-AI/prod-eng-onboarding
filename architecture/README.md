@@ -29,8 +29,13 @@ see the pointer table below.
 ## Deep dive: `nix_webserver`
 
 Nix is the monolith — the system with the most surface area and the highest blast radius, and the
-one most worth understanding in depth before touching it. Two static reference documents go well
-beyond this page's overview:
+one most worth understanding in depth before touching it.
+
+> **To run it, you need AWS access — ask Matheus Cruz.** GitHub access gets you the code; it does
+> not get you a working Nix. Request AWS on day one rather than when you first try to boot it (see
+> [Getting Started](../getting-started/README.md)).
+
+Two static reference documents go well beyond this page's overview:
 
 - [`nix-webserver/architecture.html`](nix-webserver/architecture.html) — runtime topology (the one
   image, five ECS Fargate services), the request path through the middleware stack, multi-tenancy

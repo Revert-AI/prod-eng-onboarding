@@ -20,8 +20,11 @@ Confirmed by the repo owner. This section is authoritative — unlike the commit
 | Product roadmap | **Matheus Fortes** |
 | Nix — the backend | **Daniel Vieira** |
 | Bruxo — the WhatsApp concierge agent | **Guilherme Scagnolato** |
+| **AWS access** — needed to run `nix_webserver`, not just read it | **Matheus Cruz** |
 
-New here? These five are a **sequence, not a menu** — [Getting Started](../getting-started/README.md) has the order and why it matters.
+The first five are a **sequence, not a menu** — [Getting Started](../getting-started/README.md) has the order and why it matters. The AWS row is a different kind of entry: it's an access request, not a conversation, and a new engineer should send it on day one rather than discovering at step 4 that cloning the repo wasn't enough.
+
+Note that the AWS row confirms **who to ask for access** — it does not by itself establish who owns `revert-cloud-infra`. The commit-history signal below independently points at the same person, which is corroboration but still not confirmation; see the caveat opening that section.
 
 ## Who commits where (inferred, unconfirmed)
 

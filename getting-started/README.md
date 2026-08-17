@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-08-17
+last_verified: 2026-08-07
 owner: TBD (repo maintainer — update to whoever owns onboarding)
 ---
 
@@ -44,6 +44,7 @@ If you only have time for two conversations this week, make them 1 and 2.
 Sort these in parallel with the conversations above — you'll need them by step 4.
 
 - **GitHub** — access to the `Revert-AI` organization. The repos you'll likely touch: `nix_webserver`, `portal_v2`, `concierge-agent-pi`, `revert-cloud-infra`, and `revert-knowledge-base` (see [Product & Architecture](../architecture/README.md)). Access is over SSH; confirm your key is on your GitHub account and authorized for the org.
+- **AWS** — required to actually *run* `nix_webserver`, not just read it. Ask **Matheus Cruz**. Request this early: cloning the repo is not the same as being able to run it, and this is the access most likely to block step 4. The infrastructure is AWS via Terragrunt/OpenTofu — see [Product & Architecture](../architecture/README.md).
 - **Notion** — where PRDs and Tech Specs live. You need access to `Home → Iniciativas` and `Home → Best practices`. See [How We Work](../how-we-work/README.md).
 - **Linear** (execution: initiatives, projects, issues) — you'll be on one of **Engineering**, **Produto**, **Customer XP** or **SRE & DevOps**. See [Projects](../projects/README.md).
 - **Internal chat / communication tool** — `Not yet documented`, but note that `#engineering-changes` is where cross-team changes are announced *before* being implemented, so make sure you're in it. Ask your onboarding contact.
@@ -59,7 +60,8 @@ Sort these in parallel with the conversations above — you'll need them by step
 
 1. Book the step 1 and step 2 conversations above — they're the ones that gate everything else.
 2. Confirm you can reach the `Revert-AI` GitHub org and clone at least one product repo.
-3. Ask your onboarding contact for the `Not yet documented` access items above.
-4. Ask this repo's AI assistant something real — "how does the wallet flow work in `portal_v2`", "who owns the infra repo" — to confirm your access works end to end.
-5. Read [Org & Teams](../org-and-teams/README.md) for who to ask about areas beyond the five above.
-6. Before your first real piece of work: read [How We Work](../how-we-work/README.md), then read a real PRD rather than starting from the template cold — `Middle com Escala` → `PRD — Middle Office em autopilot`, under Notion's `Iniciativas` tree, is the worked example.
+3. Ask **Matheus Cruz** for AWS access — do this on day one, before you need it. GitHub access lets you read `nix_webserver`; AWS is what lets you run it.
+4. Ask your onboarding contact for the `Not yet documented` access items above.
+5. Ask this repo's AI assistant something real — "how does the wallet flow work in `portal_v2`", "who owns the infra repo" — to confirm your access works end to end.
+6. Read [Org & Teams](../org-and-teams/README.md) for who to ask about areas beyond the five above.
+7. Before your first real piece of work: read [How We Work](../how-we-work/README.md), then read a real PRD rather than starting from the template cold — `Middle com Escala` → `PRD — Middle Office em autopilot`, under Notion's `Iniciativas` tree, is the worked example.
